@@ -2,7 +2,9 @@ package com.example.community.service;
 
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
+import com.example.community.entity.Comment;
 import com.example.community.entity.Post;
+import com.example.community.exception.PostNotFoundException;
 import com.example.community.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,8 @@ public class PostService{
                 request.getImage(),
                 //이후에 인증 토큰을 통해 받아올 예정
                 "Justin",
-                LocalDateTime.now().toString()
+                LocalDateTime.now(),
+                LocalDateTime.now()
         );
 
         postRepository.save(post);
@@ -37,32 +40,25 @@ public class PostService{
     }
 
     public Post getPost(Long postId){
-        return postRepository.findById(postId);
+        return postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
     }
 
     public Post updatePost(Long postId, UpdatePostRequest request){
-        Post post = postRepository.findById(postId);
-
-        if (post == null){
-            return null;
-        }
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
 
         post.update(
                 request.getTitle(),
                 request.getContent(),
                 request.getImage(),
-                LocalDateTime.now().toString()
+                LocalDateTime.now()
         );
 
         return post;
     }
 
-    public boolean deletePost(Long postId){
-        if (!postRepository.existsById(postId)){
-            return false;
-        }
+    public void deletePost(Long postId){
+        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
 
-        postRepository.deleteById(postId);
-        return true;
+        postRepository.deleteById(post.getId());
     }
 }

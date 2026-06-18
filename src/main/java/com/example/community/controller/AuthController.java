@@ -7,6 +7,7 @@ import com.example.community.dto.response.SignupResponse;
 import com.example.community.entity.User;
 import com.example.community.global.ApiResponse;
 import com.example.community.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class AuthController{
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<SignupResponse>> signup(@RequestBody SignupRequest request){
+    public ResponseEntity<ApiResponse<SignupResponse>> signup(@Valid @RequestBody SignupRequest request){
         Long userId = authService.signup(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -32,14 +33,8 @@ public class AuthController{
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request){
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request){
         User user = authService.login(request);
-
-        if (user == null){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-                    new ApiResponse<>("invalid_credentials", null)
-            );
-        }
 
         LoginResponse response = new LoginResponse(
                 user.getId(),

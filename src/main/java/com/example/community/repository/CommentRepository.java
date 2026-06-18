@@ -3,9 +3,11 @@ package com.example.community.repository;
 import com.example.community.entity.Comment;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class CommentRepository{
@@ -19,7 +21,8 @@ public class CommentRepository{
                 1L,
                 "댓글입니다.",
                 "Justin",
-                "2026-05-12T10:30:00"
+                LocalDateTime.of(2026, 5, 12, 10, 30),
+                LocalDateTime.of(2026, 5, 12, 10, 30)
         );
 
         Comment comment2 = new Comment(
@@ -27,7 +30,8 @@ public class CommentRepository{
                 1L,
                 "댓글이에요.",
                 "Justin",
-                "2026-05-12T11:00:00"
+                LocalDateTime.of(2026, 5, 12, 11, 0),
+                LocalDateTime.of(2026, 5, 12, 11, 0)
         );
         save(comment1);
         save(comment2);
@@ -42,8 +46,8 @@ public class CommentRepository{
         return comment;
     }
 
-    public Comment findById(Long commentId){
-        return comments.get(commentId);
+    public Optional<Comment> findById(Long commentId){
+        return Optional.ofNullable(comments.get(commentId));
     }
 
     public List<Comment> findAllByPostId(Long postId){

@@ -3,51 +3,42 @@ package com.example.community.service;
 import com.example.community.dto.request.UpdatePasswordRequest;
 import com.example.community.dto.request.UpdateUserRequest;
 import com.example.community.entity.User;
+import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserService{
+public class UserService {
 
     private final UserRepository userRepository;
 
     public User getUser(Long userId){
-        return userRepository.findById(userId);
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 
     public User updateUser(Long userId, UpdateUserRequest request){
-        User user = userRepository.findById(userId);
-
-        if (user == null){
-            return null;
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
         user.updateProfile(request.getNickname(), request.getProfileImage());
 
         return user;
     }
 
-    public boolean updatePassword(Long userId, UpdatePasswordRequest request){
-        User user = userRepository.findById(userId);
-
-        if (user == null){
-            return false;
-        }
+    public void updatePassword(Long userId, UpdatePasswordRequest request){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
         user.updatePassword(request.getNewPassword());
-
-        return true;
     }
 
-    public boolean deleteUser(Long userId){
-        if (!userRepository.existsById(userId)){
-            return false;
-        }
+    public void deleteUser(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
 
-        userRepository.deleteById(userId);
-
-        return true;
+        userRepository.deleteById(user.getId());
     }
 }

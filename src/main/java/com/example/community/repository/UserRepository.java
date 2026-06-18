@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public class UserRepository{
@@ -28,8 +29,8 @@ public class UserRepository{
         return idNum++;
     }
 
-    public User findById(Long userId){
-        return users.get(userId);
+    public Optional<User> findById(Long userId){
+        return Optional.ofNullable(users.get(userId));
     }
 
     public User findByEmail(String email){

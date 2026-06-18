@@ -3,10 +3,8 @@ package com.example.community.repository;
 import com.example.community.entity.Post;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Repository
 public class PostRepository{
@@ -22,8 +20,9 @@ public class PostRepository{
                 "내용입니다.",
                 "https://image.kr/img.jpg",
                 "Justin",
-                "2026-05-12T10:00:00"
-        );
+                LocalDateTime.of(2026, 5, 12, 11, 0),
+                LocalDateTime.of(2026, 5, 12, 11, 0)
+                );
 
         save(post);
     }
@@ -32,8 +31,8 @@ public class PostRepository{
         return idNum++;
     }
 
-    public Post findById(Long postId){
-        return posts.get(postId);
+    public Optional<Post> findById(Long postId){
+        return Optional.ofNullable(posts.get(postId));
     }
 
     public List<Post> findAll(){

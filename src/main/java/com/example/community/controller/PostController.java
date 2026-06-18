@@ -6,6 +6,7 @@ import com.example.community.dto.response.PostResponse;
 import com.example.community.entity.Post;
 import com.example.community.global.ApiResponse;
 import com.example.community.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +41,6 @@ public class PostController{
     public ResponseEntity<ApiResponse<PostResponse>> getPost(@PathVariable Long postId){
         Post post = postService.getPost(postId);
 
-        if (post == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("post_not_found", null));
-        }
-
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         "post_retrieved_success",
@@ -55,6 +51,7 @@ public class PostController{
 
     @PostMapping("")
     public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid
             @RequestBody CreatePostRequest request
     ){
         Post post = postService.createPost(request);
@@ -68,16 +65,12 @@ public class PostController{
     }
 
     @PatchMapping("/{postId}")
-    public ResponseEntity<ApiResponse<?>> updatePost(
+    public ResponseEntity<ApiResponse<PostResponse>> updatePost(
             @PathVariable Long postId,
+            @Valid
             @RequestBody UpdatePostRequest request
     ){
         Post post = postService.updatePost(postId, request);
-
-        if (post == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("post_not_found", null));
-        }
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -89,11 +82,7 @@ public class PostController{
 
     @DeleteMapping("/{postId}")
     public ResponseEntity<Void> deletePost(@PathVariable Long postId){
-        boolean deleted = postService.deletePost(postId);
-
-        if (!deleted){
-            return ResponseEntity.notFound().build();
-        }
+        postService.deletePost(postId);
 
         return ResponseEntity.noContent().build();
     }

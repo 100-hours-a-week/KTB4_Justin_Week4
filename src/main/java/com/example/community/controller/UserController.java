@@ -7,8 +7,8 @@ import com.example.community.dto.response.UserResponse;
 import com.example.community.entity.User;
 import com.example.community.global.ApiResponse;
 import com.example.community.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,11 +23,6 @@ public class UserController{
     public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable Long userId){
         User user = userService.getUser(userId);
 
-        if (user == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("user_not_found", null));
-        }
-
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         "user_retrieved_success",
@@ -39,14 +34,10 @@ public class UserController{
     @PatchMapping("/{userId}")
     public ResponseEntity<ApiResponse<UpdateUserResponse>> updateUser(
             @PathVariable Long userId,
+            @Valid
             @RequestBody UpdateUserRequest request
     ){
         User user = userService.updateUser(userId, request);
-
-        if (user == null){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("user_not_found", null));
-        }
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -59,27 +50,18 @@ public class UserController{
     @PatchMapping("/{userId}/password")
     public ResponseEntity<ApiResponse<Void>> updatePassword(
             @PathVariable Long userId,
+            @Valid
             @RequestBody UpdatePasswordRequest request
     ){
-        boolean updated = userService.updatePassword(userId, request);
-
-        if (!updated){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>("user_not_found", null));
-        }
+        userService.updatePassword(userId, request);
 
         return ResponseEntity.ok(
-                new ApiResponse<>("password_updated_success", null)
-        );
+                new ApiResponse<>("password_updated_success", null));
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId){
-        boolean deleted = userService.deleteUser(userId);
-
-        if (!deleted){
-            return ResponseEntity.notFound().build();
-        }
+        userService.deleteUser(userId);
 
         return ResponseEntity.noContent().build();
     }

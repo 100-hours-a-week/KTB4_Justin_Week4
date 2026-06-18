@@ -3,6 +3,8 @@ package com.example.community.entity;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor
 public class Post{
@@ -13,8 +15,8 @@ public class Post{
     private String image;
     private String author;
 
-    private String createdAt;
-    private String updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public Post(
             Long id,
@@ -22,7 +24,8 @@ public class Post{
             String content,
             String image,
             String author,
-            String createdAt
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
     ){
         this.id = id;
         this.title = title;
@@ -30,13 +33,14 @@ public class Post{
         this.image = image;
         this.author = author;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public void update(
             String title,
             String content,
             String image,
-            String updatedAt
+            LocalDateTime updatedAt
     ){
         this.title = title;
         this.content = content;
