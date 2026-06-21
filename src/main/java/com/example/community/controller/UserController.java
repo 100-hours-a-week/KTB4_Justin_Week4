@@ -12,12 +12,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
 public class UserController{
 
     private final UserService userService;
+
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getUsers(){
+        List<UserResponse> response = userService.getUsers().stream()
+                .map(UserResponse::new)
+                .toList();
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("users_retrieved_success", response)
+        );
+    }
 
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> getUser(@PathVariable Long userId){

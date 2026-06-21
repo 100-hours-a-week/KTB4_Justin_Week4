@@ -1,37 +1,47 @@
 package com.example.community.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Entity
 @Getter
+@Table(name = "posts")
 @NoArgsConstructor
 public class Post{
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    private String content;
-    private String image;
-    private String author;
 
+    @Column(nullable = false, length = 100)
+    private String title;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String content;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     public Post(
-            Long id,
             String title,
             String content,
-            String image,
-            String author,
+            User user,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ){
-        this.id = id;
         this.title = title;
         this.content = content;
-        this.image = image;
-        this.author = author;
+        this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -39,12 +49,10 @@ public class Post{
     public void update(
             String title,
             String content,
-            String image,
             LocalDateTime updatedAt
     ){
         this.title = title;
         this.content = content;
-        this.image = image;
         this.updatedAt = updatedAt;
     }
 }

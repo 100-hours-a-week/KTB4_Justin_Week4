@@ -6,16 +6,14 @@ import lombok.Getter;
 @Getter
 public class LoginResponse{
 
-    @JsonProperty("user_id")
-    private final Long userId;
-
+    private final Long id;
     private final String nickname;
 
     @JsonProperty("profile_image")
     private final String profileImage;
 
     public LoginResponse(Long userId, String nickname, String profileImage){
-        this.userId = userId;
+        this.id = userId;
         this.nickname = nickname;
         this.profileImage = profileImage;
     }

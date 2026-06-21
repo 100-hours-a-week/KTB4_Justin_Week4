@@ -8,6 +8,7 @@ import com.example.community.exception.UserAlreadyExistsException;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class AuthService{
 
     private final UserRepository userRepository;
 
+    @Transactional
     public Long signup(SignupRequest request){
 
         if (userRepository.existsByEmail(request.getEmail())){
@@ -22,7 +24,6 @@ public class AuthService{
         }
 
         User user = new User(
-                userRepository.nextId(),
                 request.getEmail(),
                 request.getPassword(),
                 request.getNickname(),
@@ -34,6 +35,7 @@ public class AuthService{
         return user.getId();
     }
 
+    @Transactional(readOnly = true)
     public User login(LoginRequest request){
         User user = userRepository.findByEmail(request.getEmail());
 

@@ -1,14 +1,20 @@
 package com.example.community.service;
 
 import com.example.community.dto.request.CreateCommentRequest;
+import com.example.community.dto.request.DeleteCommentRequest;
 import com.example.community.dto.request.UpdateCommentRequest;
 import com.example.community.entity.Comment;
+import com.example.community.entity.Post;
+import com.example.community.entity.User;
 import com.example.community.exception.CommentNotFoundException;
 import com.example.community.exception.PostNotFoundException;
+import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.CommentRepository;
 import com.example.community.repository.PostRepository;
+import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,25 +25,28 @@ public class CommentService{
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
     public List<Comment> getComments(Long postId){
-        if (!postRepository.existsById(postId)){
-            throw new PostNotFoundException();
-        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
 
-        return commentRepository.findAllByPostId(postId);
+        return commentRepository.findAllByPost(post);
     }
 
+    @Transactional
     public Comment createComment(Long postId, CreateCommentRequest request){
-        if (!postRepository.existsById(postId)){
-            throw new PostNotFoundException();
-        }
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(UserNotFoundException::new);
 
         Comment comment = new Comment(
-                commentRepository.nextId(),
-                postId,
+                post,
+                user,
                 request.getContent(),
-                "Justin",
                 LocalDateTime.now(),
                 LocalDateTime.now()
         );
@@ -47,16 +56,19 @@ public class CommentService{
         return comment;
     }
 
+    @Transactional
     public Comment updateComment(Long postId, Long commentId, UpdateCommentRequest request){
-        if (!postRepository.existsById(postId)){
-            throw new PostNotFoundException();
-        }
+        userRepository.findById(request.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
-        if (!comment.getPostId().equals(postId)){
-            throw new RuntimeException("comment_not_found");
+        if (!comment.getPost().getId().equals(post.getId())){
+            throw new CommentNotFoundException();
         }
 
         comment.update(
@@ -67,15 +79,18 @@ public class CommentService{
         return comment;
     }
 
-    public void deleteComment(Long postId, Long commentId){
-        if (!postRepository.existsById(postId)) {
-            throw new PostNotFoundException();
-        }
+    @Transactional
+    public void deleteComment(Long postId, Long commentId, DeleteCommentRequest request){
+        userRepository.findById(request.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
-        if (!comment.getPostId().equals(postId)) {
+        if (!comment.getPost().getId().equals(post.getId())){
             throw new CommentNotFoundException();
         }
 

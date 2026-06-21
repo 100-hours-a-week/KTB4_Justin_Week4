@@ -35,6 +35,18 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>("user_already_exists", null));
     }
 
+    @ExceptionHandler(AlreadyLikedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAlreadyLiked() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiResponse<>("already_liked", null));
+    }
+
+    @ExceptionHandler(LikeNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLikeNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiResponse<>("like_not_found", null));
+    }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidCredentials() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)

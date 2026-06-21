@@ -7,6 +7,9 @@ import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -14,11 +17,18 @@ public class UserService {
 
     private final UserRepository userRepository;
 
+    @Transactional(readOnly = true)
+    public List<User> getUsers(){
+        return userRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public User getUser(Long userId){
         return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
     }
 
+    @Transactional
     public User updateUser(Long userId, UpdateUserRequest request){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -28,6 +38,7 @@ public class UserService {
         return user;
     }
 
+    @Transactional
     public void updatePassword(Long userId, UpdatePasswordRequest request){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -35,6 +46,7 @@ public class UserService {
         user.updatePassword(request.getNewPassword());
     }
 
+    @Transactional
     public void deleteUser(Long userId){
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);

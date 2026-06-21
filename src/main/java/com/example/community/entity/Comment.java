@@ -1,31 +1,53 @@
 package com.example.community.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "comments")
 @Getter
 @NoArgsConstructor
 public class Comment{
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long postId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
-    private String author;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    public Comment(Long id, Long postId, String content, String author, LocalDateTime createdAt, LocalDateTime updatedAt) {
-        this.id = id;
-        this.postId = postId;
+    public Comment(
+            Post post,
+            User user,
+            String content,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt
+    ) {
+        this.post = post;
+        this.user = user;
         this.content = content;
-        this.author = author;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public void update(String content, LocalDateTime updatedAt) {
+    public void update(String content, LocalDateTime updatedAt){
         this.content = content;
         this.updatedAt = updatedAt;
     }

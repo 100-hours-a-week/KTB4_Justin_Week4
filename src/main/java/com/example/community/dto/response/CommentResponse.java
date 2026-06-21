@@ -22,7 +22,7 @@ public class CommentResponse{
     public CommentResponse(Comment comment){
         this.id = comment.getId();
         this.content = comment.getContent();
-        this.author = comment.getAuthor();
+        this.author = comment.getUser().getNickname();
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
     }

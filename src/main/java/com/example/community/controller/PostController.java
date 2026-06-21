@@ -1,6 +1,7 @@
 package com.example.community.controller;
 
 import com.example.community.dto.request.CreatePostRequest;
+import com.example.community.dto.request.DeletePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostResponse;
 import com.example.community.entity.Post;
@@ -26,7 +27,7 @@ public class PostController{
         List<Post> posts = postService.getPosts();
 
         List<PostResponse> response = posts.stream()
-                .map(PostResponse::new)
+                .map(postService::toPostResponse)
                 .toList();
 
         return ResponseEntity.ok(
@@ -44,7 +45,7 @@ public class PostController{
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         "post_retrieved_success",
-                        new PostResponse(post)
+                        postService.toPostResponse(post)
                 )
         );
     }
@@ -59,7 +60,7 @@ public class PostController{
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>(
                         "post_created_success",
-                        new PostResponse(post)
+                        postService.toPostResponse(post)
                 )
         );
     }
@@ -75,14 +76,18 @@ public class PostController{
         return ResponseEntity.ok(
                 new ApiResponse<>(
                         "post_updated_success",
-                        new PostResponse(post)
+                        postService.toPostResponse(post)
                 )
         );
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long postId){
-        postService.deletePost(postId);
+    public ResponseEntity<Void> deletePost(
+            @PathVariable Long postId,
+            @Valid
+            @RequestBody DeletePostRequest request
+    ){
+        postService.deletePost(postId, request);
 
         return ResponseEntity.noContent().build();
     }
