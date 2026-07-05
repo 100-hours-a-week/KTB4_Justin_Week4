@@ -23,12 +23,10 @@ public class CommentController{
     private final CommentService commentService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(@PathVariable Long postId){
-        List<Comment> comments = commentService.getComments(postId);
-
-        List<CommentResponse> response = comments.stream()
-                .map(CommentResponse::new)
-                .toList();
+    public ResponseEntity<ApiResponse<List<CommentResponse>>> getComments(
+            @PathVariable Long postId
+    ) {
+        List<CommentResponse> response = commentService.getComments(postId);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("comments_retrieved_success", response)
@@ -38,13 +36,12 @@ public class CommentController{
     @PostMapping("")
     public ResponseEntity<ApiResponse<CommentResponse>> createComment(
             @PathVariable Long postId,
-            @Valid
-            @RequestBody CreateCommentRequest request
-    ){
-        Comment comment = commentService.createComment(postId, request);
+            @Valid @RequestBody CreateCommentRequest request
+    ) {
+        CommentResponse response = commentService.createComment(postId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                new ApiResponse<>("comment_created_success", new CommentResponse(comment))
+                new ApiResponse<>("comment_created_success", response)
         );
     }
 
@@ -55,10 +52,10 @@ public class CommentController{
             @Valid
             @RequestBody UpdateCommentRequest request
     ){
-        Comment comment = commentService.updateComment(postId, commentId, request);
+        CommentResponse response = commentService.updateComment(postId, commentId, request);
 
         return ResponseEntity.ok(
-                new ApiResponse<>("comment_updated_success", new CommentResponse(comment))
+                new ApiResponse<>("comment_updated_success", response)
         );
     }
 

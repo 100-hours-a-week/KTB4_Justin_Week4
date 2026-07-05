@@ -11,6 +11,7 @@ import java.util.List;
 public class CreatePostRequest{
 
     @NotNull
+    @JsonProperty("user_id")
     private Long userId;
 
     @NotBlank

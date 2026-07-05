@@ -7,8 +7,10 @@ import com.example.community.dto.response.PostResponse;
 import com.example.community.entity.Post;
 import com.example.community.entity.PostImage;
 import com.example.community.entity.User;
+import com.example.community.exception.NoPermissionException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
+import com.example.community.repository.CommentRepository;
 import com.example.community.repository.PostImageRepository;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
@@ -22,15 +24,16 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class PostService{
+public class PostService {
 
     private final PostRepository postRepository;
     private final PostImageRepository postImageRepository;
     private final PostLikeRepository postLikeRepository;
+    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     @Transactional
-    public Post createPost(CreatePostRequest request){
+    public PostResponse createPost(CreatePostRequest request) {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);
 
@@ -47,34 +50,38 @@ public class PostService{
         postRepository.save(post);
         saveImages(post, request.getImageUrls());
 
-        return post;
+        return createPostResponse(post, request.getUserId());
     }
 
     @Transactional(readOnly = true)
-    public List<Post> getPosts(){
-        return postRepository.findAll();
-    }
-
-    @Transactional(readOnly = true)
-    public Post getPost(Long postId){
-        return postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
-    }
-
-    @Transactional(readOnly = true)
-    public PostResponse toPostResponse(Post post) {
-        List<String> imageUrls = postImageRepository.findAllByPost(post).stream()
-                .map(PostImage::getImageUrl)
+    public List<PostResponse> getPosts() {
+        return postRepository.findAll()
+                .stream()
+                .map(post -> createPostResponse(post, null))
                 .toList();
-
-        return new PostResponse(post, imageUrls);
     }
 
     @Transactional
-    public Post updatePost(Long postId, UpdatePostRequest request){
+    public PostResponse getPost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        post.increaseViewCount();
+
+        return createPostResponse(post, userId);
+    }
+
+    @Transactional
+    public PostResponse updatePost(Long postId, UpdatePostRequest request) {
         userRepository.findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);
 
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
+
+        if (!post.getUser().getId().equals(request.getUserId())) {
+            throw new NoPermissionException();
+        }
 
         post.update(
                 request.getTitle(),
@@ -86,22 +93,51 @@ public class PostService{
             replaceImages(post, request.getImageUrls());
         }
 
-        return post;
+        return createPostResponse(post, request.getUserId());
     }
 
     @Transactional
-    public void deletePost(Long postId, DeletePostRequest request){
+    public void deletePost(Long postId, DeletePostRequest request) {
         userRepository.findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);
 
-        Post post = postRepository.findById(postId).orElseThrow(PostNotFoundException::new);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(PostNotFoundException::new);
 
-        postImageRepository.deleteByPost(post);
-        postLikeRepository.deleteByPost(post);
-        postRepository.deleteById(post.getId());
+        if (!post.getUser().getId().equals(request.getUserId())) {
+            throw new NoPermissionException();
+        }
+
+        postRepository.delete(post);
     }
 
-    private void saveImages(Post post, List<String> imageUrls){
+    private PostResponse createPostResponse(Post post, Long userId) {
+        List<String> imageUrls = postImageRepository.findAllByPost(post)
+                .stream()
+                .map(PostImage::getImageUrl)
+                .toList();
+
+        boolean liked = false;
+
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+
+            if (user != null) {
+                liked = postLikeRepository.existsByPostAndUser(post, user);
+            }
+        }
+
+        return new PostResponse(
+                post,
+                imageUrls,
+                postLikeRepository.countByPost(post),
+                commentRepository.countByPost(post),
+                post.getViewCount(),
+                liked
+        );
+    }
+
+    private void saveImages(Post post, List<String> imageUrls) {
         if (imageUrls == null) {
             return;
         }

@@ -15,7 +15,7 @@ public class UserResponse{
 
     public UserResponse(User user) {
         this.id = user.getId();
-        this.nickname = user.getNickname();
+        this.nickname = user.getDisplayNickname();
         this.profileImage = user.getProfileImage();
     }
 }

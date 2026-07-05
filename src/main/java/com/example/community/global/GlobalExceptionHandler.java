@@ -111,4 +111,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("required_field_missing", null));
     }
+    @ExceptionHandler(NoPermissionException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoPermissionException() {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ApiResponse<>("no_permission", null));
+    }
 }

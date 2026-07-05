@@ -32,6 +32,9 @@ public class Post{
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "view_count", nullable = false)
+    private long viewCount = 0;
+
     public Post(
             String title,
             String content,
@@ -44,6 +47,10 @@ public class Post{
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    public void increaseViewCount(){
+        this.viewCount++;
     }
 
     public void update(

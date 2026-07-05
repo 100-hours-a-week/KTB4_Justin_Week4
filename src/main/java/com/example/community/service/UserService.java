@@ -2,8 +2,11 @@ package com.example.community.service;
 
 import com.example.community.dto.request.UpdatePasswordRequest;
 import com.example.community.dto.request.UpdateUserRequest;
+import com.example.community.dto.response.UpdateUserResponse;
+import com.example.community.dto.response.UserResponse;
 import com.example.community.entity.User;
 import com.example.community.exception.UserNotFoundException;
+import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,41 +19,60 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PostLikeRepository postLikeRepository;
 
     @Transactional(readOnly = true)
-    public List<User> getUsers(){
-        return userRepository.findAll();
+    public List<UserResponse> getUsers() {
+        return userRepository.findAll().stream()
+                .filter(user -> !user.isWithdrawn())
+                .map(UserResponse::new)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public User getUser(Long userId){
-        return userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public UserResponse getUser(Long userId) {
+        User user = findActiveUser(userId);
+
+        return new UserResponse(user);
     }
 
     @Transactional
-    public User updateUser(Long userId, UpdateUserRequest request){
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public UpdateUserResponse updateUser(Long userId, UpdateUserRequest request) {
+        User user = findActiveUser(userId);
 
         user.updateProfile(request.getNickname(), request.getProfileImage());
 
-        return user;
+        return new UpdateUserResponse(user);
     }
 
     @Transactional
-    public void updatePassword(Long userId, UpdatePasswordRequest request){
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public void updatePassword(Long userId, UpdatePasswordRequest request) {
+        User user = findActiveUser(userId);
 
         user.updatePassword(request.getNewPassword());
     }
 
     @Transactional
-    public void deleteUser(Long userId){
+    public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        userRepository.deleteById(user.getId());
+        if (user.isWithdrawn()) {
+            return;
+        }
+
+        postLikeRepository.deleteByUser(user);
+        user.withdraw();
+    }
+
+    private User findActiveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.isWithdrawn()) {
+            throw new UserNotFoundException();
+        }
+
+        return user;
     }
 }

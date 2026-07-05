@@ -2,6 +2,8 @@ package com.example.community.service;
 
 import com.example.community.dto.request.LoginRequest;
 import com.example.community.dto.request.SignupRequest;
+import com.example.community.dto.response.LoginResponse;
+import com.example.community.dto.response.SignupResponse;
 import com.example.community.entity.User;
 import com.example.community.exception.InvalidCredentialsException;
 import com.example.community.exception.UserAlreadyExistsException;
@@ -12,14 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService{
+public class AuthService {
 
     private final UserRepository userRepository;
 
     @Transactional
-    public Long signup(SignupRequest request){
+    public SignupResponse signup(SignupRequest request) {
 
-        if (userRepository.existsByEmail(request.getEmail())){
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException();
         }
 
@@ -32,23 +34,29 @@ public class AuthService{
 
         userRepository.save(user);
 
-        return user.getId();
+        return new SignupResponse(user.getId());
     }
 
     @Transactional(readOnly = true)
-    public User login(LoginRequest request){
+    public LoginResponse login(LoginRequest request) {
+
         User user = userRepository.findByEmail(request.getEmail());
 
-        if (user == null){
-            throw new InvalidCredentialsException();
-        }
-        if (!user.getPassword().equals(request.getPassword())){
+        if (user == null || user.isWithdrawn()) {
             throw new InvalidCredentialsException();
         }
 
-        return user;
+        if (!user.getPassword().equals(request.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+
+        return new LoginResponse(
+                user.getId(),
+                user.getNickname(),
+                user.getProfileImage()
+        );
     }
 
-    public void logout(){
+    public void logout() {
     }
 }

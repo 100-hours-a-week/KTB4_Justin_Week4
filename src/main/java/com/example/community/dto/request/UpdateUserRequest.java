@@ -11,6 +11,7 @@ public class UpdateUserRequest{
     @NotBlank
     private String nickname;
 
+    @NotBlank
     @JsonProperty("profile_image")
     private String profileImage;
 }

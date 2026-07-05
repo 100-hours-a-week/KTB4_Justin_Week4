@@ -3,6 +3,7 @@ package com.example.community.service;
 import com.example.community.dto.request.CreateCommentRequest;
 import com.example.community.dto.request.DeleteCommentRequest;
 import com.example.community.dto.request.UpdateCommentRequest;
+import com.example.community.dto.response.CommentResponse;
 import com.example.community.entity.Comment;
 import com.example.community.entity.Post;
 import com.example.community.entity.User;
@@ -15,7 +16,7 @@ import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.example.community.exception.NoPermissionException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -28,15 +29,19 @@ public class CommentService{
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<Comment> getComments(Long postId){
+    public List<CommentResponse> getComments(Long postId) {
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        return commentRepository.findAllByPost(post);
+        return commentRepository.findAllByPost(post)
+                .stream()
+                .map(CommentResponse::new)
+                .toList();
     }
 
     @Transactional
-    public Comment createComment(Long postId, CreateCommentRequest request){
+    public CommentResponse createComment(Long postId, CreateCommentRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -53,11 +58,11 @@ public class CommentService{
 
         commentRepository.save(comment);
 
-        return comment;
+        return new CommentResponse(comment);
     }
 
     @Transactional
-    public Comment updateComment(Long postId, Long commentId, UpdateCommentRequest request){
+    public CommentResponse updateComment(Long postId, Long commentId, UpdateCommentRequest request){
         userRepository.findById(request.getUserId())
                 .orElseThrow(UserNotFoundException::new);
 
@@ -71,12 +76,16 @@ public class CommentService{
             throw new CommentNotFoundException();
         }
 
+        if (!comment.getUser().getId().equals(request.getUserId())) {
+            throw new NoPermissionException();
+        }
+
         comment.update(
                 request.getContent(),
                 LocalDateTime.now()
         );
 
-        return comment;
+        return new CommentResponse(comment);
     }
 
     @Transactional
@@ -90,10 +99,14 @@ public class CommentService{
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
-        if (!comment.getPost().getId().equals(post.getId())){
+        if (!comment.getPost().getId().equals(post.getId())) {
             throw new CommentNotFoundException();
         }
 
-        commentRepository.deleteById(commentId);
+        if (!comment.getUser().getId().equals(request.getUserId())) {
+            throw new NoPermissionException();
+        }
+
+        commentRepository.delete(comment);
     }
 }

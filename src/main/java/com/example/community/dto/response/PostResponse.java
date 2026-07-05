@@ -15,8 +15,26 @@ public class PostResponse {
     private final String content;
     private final String author;
 
+    @JsonProperty("user_id")
+    private final Long userId;
+
+    @JsonProperty("author_profile_image")
+    private final String authorProfileImage;
+
     @JsonProperty("image_urls")
     private final List<String> imageUrls;
+
+    @JsonProperty("like_count")
+    private final long likeCount;
+
+    @JsonProperty("comment_count")
+    private final long commentCount;
+
+    @JsonProperty("view_count")
+    private final long viewCount;
+
+    @JsonProperty("liked")
+    private final boolean liked;
 
     @JsonProperty("created_at")
     private final LocalDateTime createdAt;
@@ -24,12 +42,25 @@ public class PostResponse {
     @JsonProperty("updated_at")
     private final LocalDateTime updatedAt;
 
-    public PostResponse(Post post, List<String> imageUrls) {
+    public PostResponse(
+            Post post,
+            List<String> imageUrls,
+            long likeCount,
+            long commentCount,
+            long viewCount,
+            boolean liked
+    ) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.content = post.getContent();
-        this.author = post.getUser().getNickname();
+        this.author = post.getUser().getDisplayNickname();
+        this.userId = post.getUser().getId();
+        this.authorProfileImage = post.getUser().getProfileImage();
         this.imageUrls = imageUrls;
+        this.likeCount = likeCount;
+        this.commentCount = commentCount;
+        this.viewCount = viewCount;
+        this.liked = liked;
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
     }
