@@ -1,6 +1,5 @@
 package com.example.community.service;
 
-import com.example.community.dto.request.PostLikeRequest;
 import com.example.community.entity.Post;
 import com.example.community.entity.PostLike;
 import com.example.community.entity.User;
@@ -26,8 +25,8 @@ public class PostLikeService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void likePost(Long postId, PostLikeRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public void likePost(Long postId, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         Post post = postRepository.findById(postId)
@@ -41,8 +40,8 @@ public class PostLikeService {
     }
 
     @Transactional
-    public void unlikePost(Long postId, PostLikeRequest request){
-        User user = userRepository.findById(request.getUserId())
+    public void unlikePost(Long postId, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         Post post = postRepository.findById(postId)

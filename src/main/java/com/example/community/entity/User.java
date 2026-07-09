@@ -29,7 +29,6 @@ public class User{
     @Column(nullable = false, length = 500)
     private String profileImage;
 
-    //JPA를 통해 받아오면 id제거
     public User(String email, String password, String nickname, String profileImage) {
         this.email = email;
         this.password = password;

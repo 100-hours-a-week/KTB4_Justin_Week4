@@ -1,7 +1,6 @@
 package com.example.community.controller;
 
 import com.example.community.dto.request.CreatePostRequest;
-import com.example.community.dto.request.DeletePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostResponse;
 import com.example.community.global.ApiResponse;
@@ -10,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public class PostController {
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>> getPost(
             @PathVariable Long postId,
-            @RequestParam(name = "user_id", required = false) Long userId
+            @AuthenticationPrincipal Long userId
     ) {
         PostResponse response = postService.getPost(postId, userId);
 
@@ -44,9 +44,10 @@ public class PostController {
 
     @PostMapping("")
     public ResponseEntity<ApiResponse<PostResponse>> createPost(
-            @Valid @RequestBody CreatePostRequest request
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody CreatePostRequest requestBody
     ) {
-        PostResponse response = postService.createPost(request);
+        PostResponse response = postService.createPost(userId, requestBody);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>("post_created_success", response)
@@ -56,9 +57,10 @@ public class PostController {
     @PatchMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>> updatePost(
             @PathVariable Long postId,
-            @Valid @RequestBody UpdatePostRequest request
+            @AuthenticationPrincipal Long userId,
+            @Valid @RequestBody UpdatePostRequest requestBody
     ) {
-        PostResponse response = postService.updatePost(postId, request);
+        PostResponse response = postService.updatePost(postId, userId, requestBody);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("post_updated_success", response)
@@ -66,11 +68,8 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> deletePost(
-            @PathVariable Long postId,
-            @Valid @RequestBody DeletePostRequest request
-    ) {
-        postService.deletePost(postId, request);
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId) {
+        postService.deletePost(postId);
 
         return ResponseEntity.noContent().build();
     }

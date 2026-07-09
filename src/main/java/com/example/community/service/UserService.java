@@ -9,6 +9,8 @@ import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public List<UserResponse> getUsers() {
@@ -37,6 +40,7 @@ public class UserService {
     }
 
     @Transactional
+    @PreAuthorize("#userId == authentication.principal")
     public UpdateUserResponse updateUser(Long userId, UpdateUserRequest request) {
         User user = findActiveUser(userId);
 
@@ -46,13 +50,15 @@ public class UserService {
     }
 
     @Transactional
+    @PreAuthorize("#userId == authentication.principal")
     public void updatePassword(Long userId, UpdatePasswordRequest request) {
         User user = findActiveUser(userId);
 
-        user.updatePassword(request.getNewPassword());
+        user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Transactional
+    @PreAuthorize("#userId == authentication.principal")
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);

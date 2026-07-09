@@ -1,12 +1,11 @@
 package com.example.community.controller;
 
-import com.example.community.dto.request.PostLikeRequest;
 import com.example.community.global.ApiResponse;
 import com.example.community.service.PostLikeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,9 +18,9 @@ public class PostLikeController {
     @PostMapping("")
     public ResponseEntity<ApiResponse<Void>> likePost(
             @PathVariable Long postId,
-            @Valid @RequestBody PostLikeRequest request
+            @AuthenticationPrincipal Long userId
     ) {
-        postLikeService.likePost(postId, request);
+        postLikeService.likePost(postId, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>("like_created_success", null));
@@ -30,9 +29,9 @@ public class PostLikeController {
     @DeleteMapping("")
     public ResponseEntity<Void> unlikePost(
             @PathVariable Long postId,
-            @Valid @RequestBody PostLikeRequest request
+            @AuthenticationPrincipal Long userId
     ) {
-        postLikeService.unlikePost(postId, request);
+        postLikeService.unlikePost(postId, userId);
 
         return ResponseEntity.noContent().build();
     }

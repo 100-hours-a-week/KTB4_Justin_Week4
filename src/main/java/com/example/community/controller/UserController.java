@@ -41,9 +41,9 @@ public class UserController {
     @PatchMapping("/{userId}")
     public ResponseEntity<ApiResponse<UpdateUserResponse>> updateUser(
             @PathVariable Long userId,
-            @Valid @RequestBody UpdateUserRequest request
+            @Valid @RequestBody UpdateUserRequest requestBody
     ) {
-        UpdateUserResponse response = userService.updateUser(userId, request);
+        UpdateUserResponse response = userService.updateUser(userId, requestBody);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("user_updated_success", response)
@@ -53,9 +53,9 @@ public class UserController {
     @PatchMapping("/{userId}/password")
     public ResponseEntity<ApiResponse<Void>> updatePassword(
             @PathVariable Long userId,
-            @Valid @RequestBody UpdatePasswordRequest request
+            @Valid @RequestBody UpdatePasswordRequest requestBody
     ) {
-        userService.updatePassword(userId, request);
+        userService.updatePassword(userId, requestBody);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("password_updated_success", null)

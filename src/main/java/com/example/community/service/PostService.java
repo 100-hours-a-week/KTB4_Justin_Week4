@@ -1,13 +1,11 @@
 package com.example.community.service;
 
 import com.example.community.dto.request.CreatePostRequest;
-import com.example.community.dto.request.DeletePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostResponse;
 import com.example.community.entity.Post;
 import com.example.community.entity.PostImage;
 import com.example.community.entity.User;
-import com.example.community.exception.NoPermissionException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.CommentRepository;
@@ -16,6 +14,7 @@ import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,8 +32,8 @@ public class PostService {
     private final UserRepository userRepository;
 
     @Transactional
-    public PostResponse createPost(CreatePostRequest request) {
-        User user = userRepository.findById(request.getUserId())
+    public PostResponse createPost(Long userId, CreatePostRequest request) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         LocalDateTime now = LocalDateTime.now();
@@ -50,7 +49,7 @@ public class PostService {
         postRepository.save(post);
         saveImages(post, request.getImageUrls());
 
-        return createPostResponse(post, request.getUserId());
+        return createPostResponse(post, userId);
     }
 
     @Transactional(readOnly = true)
@@ -72,16 +71,10 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse updatePost(Long postId, UpdatePostRequest request) {
-        userRepository.findById(request.getUserId())
-                .orElseThrow(UserNotFoundException::new);
-
+    @PreAuthorize("@postRepository.findById(#postId).orElse(null)?.user?.id == authentication.principal")
+    public PostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
-
-        if (!post.getUser().getId().equals(request.getUserId())) {
-            throw new NoPermissionException();
-        }
 
         post.update(
                 request.getTitle(),
@@ -93,20 +86,14 @@ public class PostService {
             replaceImages(post, request.getImageUrls());
         }
 
-        return createPostResponse(post, request.getUserId());
+        return createPostResponse(post, userId);
     }
 
     @Transactional
-    public void deletePost(Long postId, DeletePostRequest request) {
-        userRepository.findById(request.getUserId())
-                .orElseThrow(UserNotFoundException::new);
-
+    @PreAuthorize("@postRepository.findById(#postId).orElse(null)?.user?.id == authentication.principal")
+    public void deletePost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
-
-        if (!post.getUser().getId().equals(request.getUserId())) {
-            throw new NoPermissionException();
-        }
 
         postRepository.delete(post);
     }

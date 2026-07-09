@@ -59,7 +59,10 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>("authentication_required", null));
     }
 
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler({
+            AccessDeniedException.class,
+            org.springframework.security.access.AccessDeniedException.class
+    })
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ApiResponse<>("access_denied", null));

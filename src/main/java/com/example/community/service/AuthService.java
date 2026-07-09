@@ -8,7 +8,14 @@ import com.example.community.entity.User;
 import com.example.community.exception.InvalidCredentialsException;
 import com.example.community.exception.UserAlreadyExistsException;
 import com.example.community.repository.UserRepository;
+import com.example.community.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Transactional
     public SignupResponse signup(SignupRequest request) {
@@ -27,7 +37,7 @@ public class AuthService {
 
         User user = new User(
                 request.getEmail(),
-                request.getPassword(),
+                passwordEncoder.encode(request.getPassword()),
                 request.getNickname(),
                 request.getProfileImage()
         );
@@ -39,22 +49,27 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-        User user = userRepository.findByEmail(request.getEmail());
+            User user = userRepository.findByEmail(authentication.getName());
 
-        if (user == null || user.isWithdrawn()) {
+            String accessToken = jwtTokenProvider.createToken(user.getId());
+
+            return new LoginResponse(
+                    user.getId(),
+                    user.getNickname(),
+                    user.getProfileImage(),
+                    accessToken
+            );
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
             throw new InvalidCredentialsException();
         }
-
-        if (!user.getPassword().equals(request.getPassword())) {
-            throw new InvalidCredentialsException();
-        }
-
-        return new LoginResponse(
-                user.getId(),
-                user.getNickname(),
-                user.getProfileImage()
-        );
     }
 
     public void logout() {

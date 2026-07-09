@@ -24,3 +24,7 @@ spring:
 app:
   base-url: http://localhost:8080
   upload-dir: uploads
+
+jwt:
+  secret-key: very-very-long-and-super-secret-key
+  access-token-expiration: 1800000

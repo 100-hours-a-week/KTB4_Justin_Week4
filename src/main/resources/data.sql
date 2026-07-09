@@ -1,11 +1,11 @@
 INSERT INTO users (email, password, nickname, profile_image)
 VALUES
-('justin@test.com', 'Test123456!', 'Justin', 'http://localhost:8080/uploads/profile-justin.png'),
-('jun@test.com', 'Test123456!', 'Jun', 'http://localhost:8080/uploads/profile-jun.png'),
-('selina@test.com', 'Test123456!', 'Selina', 'http://localhost:8080/uploads/profile-selina.png'),
-('huey@test.com', 'Test123456!', 'Huey', 'http://localhost:8080/uploads/profile-huey.png'),
-('vinny@test.com', 'Test123456!', 'Vinny', 'http://localhost:8080/uploads/profile-vinny.png'),
-('keryn@test.com', 'Test123456!', 'Keryn', 'http://localhost:8080/uploads/profile-keryn.png');
+('justin@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Justin', 'http://localhost:8080/uploads/profile-justin.png'),
+('jun@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Jun', 'http://localhost:8080/uploads/profile-jun.png'),
+('selina@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Selina', 'http://localhost:8080/uploads/profile-selina.png'),
+('huey@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Huey', 'http://localhost:8080/uploads/profile-huey.png'),
+('vinny@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Vinny', 'http://localhost:8080/uploads/profile-vinny.png'),
+('keryn@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Keryn', 'http://localhost:8080/uploads/profile-keryn.png');
 
 INSERT INTO posts (title, content, user_id, created_at, updated_at, view_count)
 VALUES
