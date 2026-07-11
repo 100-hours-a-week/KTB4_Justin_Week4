@@ -6,6 +6,7 @@ import com.example.community.dto.response.LoginResponse;
 import com.example.community.dto.response.SignupResponse;
 import com.example.community.entity.User;
 import com.example.community.exception.InvalidCredentialsException;
+import com.example.community.exception.NicknameAlreadyExistsException;
 import com.example.community.exception.UserAlreadyExistsException;
 import com.example.community.repository.UserRepository;
 import com.example.community.security.JwtTokenProvider;
@@ -33,6 +34,10 @@ public class AuthService {
 
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistsException();
+        }
+
+        if (userRepository.existsByNickname(request.getNickname())) {
+            throw new NicknameAlreadyExistsException();
         }
 
         User user = new User(

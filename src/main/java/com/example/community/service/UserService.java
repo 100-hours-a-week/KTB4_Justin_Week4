@@ -5,6 +5,7 @@ import com.example.community.dto.request.UpdateUserRequest;
 import com.example.community.dto.response.UpdateUserResponse;
 import com.example.community.dto.response.UserResponse;
 import com.example.community.entity.User;
+import com.example.community.exception.NicknameAlreadyExistsException;
 import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.UserRepository;
@@ -43,7 +44,12 @@ public class UserService {
     @PreAuthorize("#userId == authentication.principal")
     public UpdateUserResponse updateUser(Long userId, UpdateUserRequest request) {
         User user = findActiveUser(userId);
-
+        if (userRepository.existsByNicknameAndIdNot(
+                request.getNickname(),
+                userId
+        )) {
+            throw new NicknameAlreadyExistsException();
+        }
         user.updateProfile(request.getNickname(), request.getProfileImage());
 
         return new UpdateUserResponse(user);

@@ -58,6 +58,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiResponse<>("authentication_required", null));
     }
+    @ExceptionHandler(NicknameAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNickNameAlreadyExsists() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiResponse<>("nickname_already_exists", null));
+    }
 
     @ExceptionHandler({
             AccessDeniedException.class,
