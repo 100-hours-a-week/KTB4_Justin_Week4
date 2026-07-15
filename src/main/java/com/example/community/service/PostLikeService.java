@@ -4,6 +4,7 @@ import com.example.community.entity.Post;
 import com.example.community.entity.PostLike;
 import com.example.community.entity.User;
 import com.example.community.exception.AlreadyLikedException;
+import com.example.community.exception.AuthenticationRequiredException;
 import com.example.community.exception.LikeNotFoundException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
@@ -26,8 +27,8 @@ public class PostLikeService {
 
     @Transactional
     public void likePost(Long postId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        validateAuthenticatedUserId(userId);
+        User user = findActiveUser(userId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
@@ -41,8 +42,8 @@ public class PostLikeService {
 
     @Transactional
     public void unlikePost(Long postId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        validateAuthenticatedUserId(userId);
+        User user = findActiveUser(userId);
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
@@ -51,5 +52,21 @@ public class PostLikeService {
                 .orElseThrow(LikeNotFoundException::new);
 
         postLikeRepository.delete(postLike);
+    }
+
+    private User findActiveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.isWithdrawn()) {
+            throw new UserNotFoundException();
+        }
+        return user;
+    }
+
+    private void validateAuthenticatedUserId(Long userId) {
+        if (userId == null) {
+            throw new AuthenticationRequiredException();
+        }
     }
 }

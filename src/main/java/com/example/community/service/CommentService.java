@@ -6,7 +6,9 @@ import com.example.community.dto.response.CommentResponse;
 import com.example.community.entity.Comment;
 import com.example.community.entity.Post;
 import com.example.community.entity.User;
+import com.example.community.exception.AuthenticationRequiredException;
 import com.example.community.exception.CommentNotFoundException;
+import com.example.community.exception.InvalidRequestException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.CommentRepository;
@@ -41,11 +43,12 @@ public class CommentService {
 
     @Transactional
     public CommentResponse createComment(Long postId, Long userId, CreateCommentRequest request) {
+        validateAuthenticatedUserId(userId);
+        validateCommentContent(request.getContent());
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = findActiveUser(userId);
 
         Comment comment = new Comment(
                 post,
@@ -63,6 +66,7 @@ public class CommentService {
     @Transactional
     @PreAuthorize("@commentRepository.findById(#commentId).orElse(null)?.user?.id == authentication.principal")
     public CommentResponse updateComment(Long postId, Long commentId, UpdateCommentRequest request) {
+        validateCommentContent(request.getContent());
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -95,5 +99,27 @@ public class CommentService {
         }
 
         commentRepository.delete(comment);
+    }
+
+    private User findActiveUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (user.isWithdrawn()) {
+            throw new UserNotFoundException();
+        }
+        return user;
+    }
+
+    private void validateAuthenticatedUserId(Long userId) {
+        if (userId == null) {
+            throw new AuthenticationRequiredException();
+        }
+    }
+
+    private void validateCommentContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new InvalidRequestException();
+        }
     }
 }

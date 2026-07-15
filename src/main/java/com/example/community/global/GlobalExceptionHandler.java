@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -59,42 +61,15 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>("authentication_required", null));
     }
     @ExceptionHandler(NicknameAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNickNameAlreadyExsists() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+    public ResponseEntity<ApiResponse<Void>> handleNicknameAlreadyExists() {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiResponse<>("nickname_already_exists", null));
     }
 
-    @ExceptionHandler({
-            AccessDeniedException.class,
-            org.springframework.security.access.AccessDeniedException.class
-    })
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied() {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ApiResponse<>("access_denied", null));
-    }
-
-    @ExceptionHandler(InvalidUserIdException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidUserId() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>("invalid_user_id", null));
-    }
-
-    @ExceptionHandler(InvalidPostIdException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidPostId() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>("invalid_post_id", null));
-    }
-
-    @ExceptionHandler(InvalidCommentIdException.class)
-    public ResponseEntity<ApiResponse<Void>> handleInvalidCommentId() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>("invalid_comment_id", null));
-    }
-
-    @ExceptionHandler(RequiredFieldMissingException.class)
-    public ResponseEntity<ApiResponse<Void>> handleRequiredFieldMissing() {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>("required_field_missing", null));
     }
 
     @ExceptionHandler(InvalidRequestException.class)
@@ -104,6 +79,14 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable() {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>("invalid_request", null));
+    }
+    @ExceptionHandler({
+            MissingServletRequestPartException.class,
+            MaxUploadSizeExceededException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleInvalidUpload() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ApiResponse<>("invalid_request", null));
     }
@@ -118,10 +101,5 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.badRequest()
                 .body(new ApiResponse<>("required_field_missing", null));
-    }
-    @ExceptionHandler(NoPermissionException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNoPermissionException() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new ApiResponse<>("no_permission", null));
     }
 }

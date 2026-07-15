@@ -22,8 +22,10 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> getPosts() {
-        List<PostResponse> response = postService.getPosts();
+    public ResponseEntity<ApiResponse<List<PostResponse>>> getPosts(
+            @AuthenticationPrincipal Long userId
+    ) {
+        List<PostResponse> response = postService.getPosts(userId);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("posts_retrieved_success", response)

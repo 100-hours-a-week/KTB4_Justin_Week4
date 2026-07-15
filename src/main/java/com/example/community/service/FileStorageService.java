@@ -20,7 +20,12 @@ public class FileStorageService {
     private String uploadDir;
 
     public FileUploadResponse save(MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
+            throw new InvalidRequestException();
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
             throw new InvalidRequestException();
         }
 
@@ -49,7 +54,11 @@ public class FileStorageService {
             return uuid + ".jpg";
         }
 
-        String safeName = originalName.replaceAll("[\\\\/:*?\"<>|]", "_");
+        String safeName = originalName
+                .trim()
+                .replaceAll("\\s+", "_")
+                .replaceAll("[\\\\/:*?\"<>|]", "_");
+
         return uuid + "_" + safeName;
     }
 }

@@ -50,7 +50,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/signup", "/auth/login").permitAll()
+                .requestMatchers("/auth/signup", "/auth/login", "/pages/posts", "/pages/post/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/posts", "/posts/*", "/posts/*/comments").permitAll()
                 .requestMatchers(HttpMethod.POST, "/uploads").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                     .requestMatchers(

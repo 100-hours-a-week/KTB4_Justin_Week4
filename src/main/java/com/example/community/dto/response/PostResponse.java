@@ -5,8 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
 @Getter
 public class PostResponse {
 
@@ -21,8 +19,8 @@ public class PostResponse {
     @JsonProperty("author_profile_image")
     private final String authorProfileImage;
 
-    @JsonProperty("image_urls")
-    private final List<String> imageUrls;
+    @JsonProperty("image_url")
+    private final String imageUrl;
 
     @JsonProperty("like_count")
     private final long likeCount;
@@ -44,7 +42,7 @@ public class PostResponse {
 
     public PostResponse(
             Post post,
-            List<String> imageUrls,
+            String imageUrl,
             long likeCount,
             long commentCount,
             long viewCount,
@@ -56,7 +54,7 @@ public class PostResponse {
         this.author = post.getUser().getDisplayNickname();
         this.userId = post.getUser().getId();
         this.authorProfileImage = post.getUser().getProfileImage();
-        this.imageUrls = imageUrls;
+        this.imageUrl = imageUrl;
         this.likeCount = likeCount;
         this.commentCount = commentCount;
         this.viewCount = viewCount;
