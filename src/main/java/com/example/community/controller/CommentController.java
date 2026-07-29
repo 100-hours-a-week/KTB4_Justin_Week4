@@ -49,9 +49,10 @@ public class CommentController {
     public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
             @PathVariable Long postId,
             @PathVariable Long commentId,
+            @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdateCommentRequest requestBody
     ) {
-        CommentResponse response = commentService.updateComment(postId, commentId, requestBody);
+        CommentResponse response = commentService.updateComment(postId, commentId, userId, requestBody);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("comment_updated_success", response)
@@ -61,9 +62,10 @@ public class CommentController {
     @DeleteMapping("/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long postId,
-            @PathVariable Long commentId
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal Long userId
     ) {
-        commentService.deleteComment(postId, commentId);
+        commentService.deleteComment(postId, commentId, userId);
 
         return ResponseEntity.noContent().build();
     }

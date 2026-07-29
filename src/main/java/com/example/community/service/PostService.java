@@ -16,7 +16,7 @@ import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,12 +81,12 @@ public class PostService {
     }
 
     @Transactional
-    @PreAuthorize("@postRepository.findById(#postId).orElse(null)?.user?.id == authentication.principal")
     public PostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         validateAuthenticatedUserId(userId);
-        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
+        validatePostOwner(post, userId);
+        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
 
         post.update(
                 request.getTitle(),
@@ -102,12 +102,19 @@ public class PostService {
     }
 
     @Transactional
-    @PreAuthorize("@postRepository.findById(#postId).orElse(null)?.user?.id == authentication.principal")
-    public void deletePost(Long postId) {
+    public void deletePost(Long postId, Long userId) {
+        validateAuthenticatedUserId(userId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
+        validatePostOwner(post, userId);
 
         postRepository.delete(post);
+    }
+
+    private void validatePostOwner(Post post, Long userId) {
+        if (!post.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("access_denied");
+        }
     }
 
     private PostResponse createPostResponse(Post post, Long userId) {

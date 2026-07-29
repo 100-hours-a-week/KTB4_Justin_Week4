@@ -15,7 +15,7 @@ import com.example.community.repository.CommentRepository;
 import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,9 +64,13 @@ public class CommentService {
     }
 
     @Transactional
-    @PreAuthorize("@commentRepository.findById(#commentId).orElse(null)?.user?.id == authentication.principal")
-    public CommentResponse updateComment(Long postId, Long commentId, UpdateCommentRequest request) {
-        validateCommentContent(request.getContent());
+    public CommentResponse updateComment(
+            Long postId,
+            Long commentId,
+            Long userId,
+            UpdateCommentRequest request
+    ) {
+        validateAuthenticatedUserId(userId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -76,6 +80,8 @@ public class CommentService {
         if (!comment.getPost().getId().equals(post.getId())) {
             throw new CommentNotFoundException();
         }
+        validateCommentOwner(comment, userId);
+        validateCommentContent(request.getContent());
 
         comment.update(
                 request.getContent(),
@@ -86,8 +92,8 @@ public class CommentService {
     }
 
     @Transactional
-    @PreAuthorize("@commentRepository.findById(#commentId).orElse(null)?.user?.id == authentication.principal")
-    public void deleteComment(Long postId, Long commentId) {
+    public void deleteComment(Long postId, Long commentId, Long userId) {
+        validateAuthenticatedUserId(userId);
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
@@ -97,8 +103,15 @@ public class CommentService {
         if (!comment.getPost().getId().equals(post.getId())) {
             throw new CommentNotFoundException();
         }
+        validateCommentOwner(comment, userId);
 
         commentRepository.delete(comment);
+    }
+
+    private void validateCommentOwner(Comment comment, Long userId) {
+        if (!comment.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("access_denied");
+        }
     }
 
     private User findActiveUser(Long userId) {
