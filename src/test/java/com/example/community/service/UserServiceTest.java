@@ -254,7 +254,7 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("유저 탈퇴 시 좋아요를 먼저 삭제하고 유저를 탈퇴 처리한다")
+    @DisplayName("유저 탈퇴 시 좋아요를 삭제하고 유저를 탈퇴 처리한다")
     void deleteUserSuccess() {
         Long userId = 1L;
         User user = createUser();
