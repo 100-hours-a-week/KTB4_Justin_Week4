@@ -15,7 +15,7 @@ spring:
 
 app:
   base-url: ${APP_BASE_URL}
-  upload-dir: ${UPLOAD_DIR:/app/uploads}
+  upload-dir: ${UPLOAD_DIR}
 
 jwt:
   secret-key: ${JWT_SECRET}
