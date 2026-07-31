@@ -1,8 +1,6 @@
 services:
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME:?DOCKERHUB_USERNAME is required}/tunelog-backend:${IMAGE_TAG:-latest}
     env_file:
       - .env
     environment:
@@ -15,14 +13,9 @@ services:
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-      args:
-        API_BASE_URL: /api
+    image: ${DOCKERHUB_USERNAME:?DOCKERHUB_USERNAME is required}/tunelog-frontend:${IMAGE_TAG:-latest}
     depends_on:
       - backend
     ports:
       - "80:80"
     restart: unless-stopped
-
