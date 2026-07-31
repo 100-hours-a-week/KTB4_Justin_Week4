@@ -1,0 +1,12 @@
+.git
+.gitignore
+.DS_Store
+.gradle
+build
+bin
+out
+uploads
+.env
+docs
+deploy
+
