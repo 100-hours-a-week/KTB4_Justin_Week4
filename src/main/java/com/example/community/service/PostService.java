@@ -202,6 +202,16 @@ public class PostService {
             return false;
         }
 
+        String uploadPrefix = "/uploads/";
+        if (imageUrl.startsWith(uploadPrefix)) {
+            String fileName = imageUrl.substring(uploadPrefix.length());
+
+            return !fileName.isBlank()
+                    && !fileName.contains("..")
+                    && !fileName.contains("/")
+                    && !fileName.contains("\\");
+        }
+
         try {
             URI uri = new URI(imageUrl);
             return ("http".equalsIgnoreCase(uri.getScheme())
