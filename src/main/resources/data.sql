@@ -1,11 +1,11 @@
 INSERT INTO users (email, password, nickname, profile_image)
 VALUES
-('justin@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Justin', 'http://localhost:8080/uploads/profile-justin.png'),
-('jun@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Jun', 'http://localhost:8080/uploads/profile-jun.png'),
-('selina@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Selina', 'http://localhost:8080/uploads/profile-selina.png'),
-('huey@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Huey', 'http://localhost:8080/uploads/profile-huey.png'),
-('vinny@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Vinny', 'http://localhost:8080/uploads/profile-vinny.png'),
-('keryn@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Keryn', 'http://localhost:8080/uploads/profile-keryn.png');
+('justin@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Justin', '/uploads/profile-justin.png'),
+('jun@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Jun', '/uploads/profile-jun.png'),
+('selina@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Selina', '/uploads/profile-selina.png'),
+('huey@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Huey', '/uploads/profile-huey.png'),
+('vinny@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Vinny', '/uploads/profile-vinny.png'),
+('keryn@test.com', '$2y$10$KtZSFnXlVWt3TMNQQ77WYupG4LRS1IytTXMDHLZDHtFdGVS./Wv4W', 'Keryn', '/uploads/profile-keryn.png');
 
 INSERT INTO posts (title, content, user_id, created_at, updated_at, view_count)
 VALUES
@@ -33,27 +33,27 @@ VALUES
 
 INSERT INTO post_images (post_id, image_url)
 VALUES
-(1, 'http://localhost:8080/uploads/oasis-don''t look back in anger.jpg'),
-(2, 'http://localhost:8080/uploads/oasis-whatever.jpg'),
-(3, 'http://localhost:8080/uploads/oasis-little by little.jpg'),
-(4, 'http://localhost:8080/uploads/rhcp-can''t stop.jpg'),
-(5, 'http://localhost:8080/uploads/the beatles-octopus''s garden.jpg'),
-(6, 'http://localhost:8080/uploads/stevie wonder-i just called to say i love you.jpg'),
-(7, 'http://localhost:8080/uploads/bon jovi-livin'' on a prayer.jpg'),
-(8, 'http://localhost:8080/uploads/billyjoel-pianoman.jpg'),
-(9, 'http://localhost:8080/uploads/maroon5-this love.jpg'),
-(10, 'http://localhost:8080/uploads/harry styles-falling.jpg'),
-(11, 'http://localhost:8080/uploads/greenday-last night on earth.jpg'),
-(12, 'http://localhost:8080/uploads/coldplay-yellow.jpg'),
-(13, 'http://localhost:8080/uploads/jason mraz-lucky.jpg'),
-(14, 'http://localhost:8080/uploads/keira knightley-tell me if you wanna go home.jpg'),
-(15, 'http://localhost:8080/uploads/aimyon-kimi wa rock wo kikanai.jpg'),
-(16, 'http://localhost:8080/uploads/officialhigedandism-pretender.jpg'),
-(17, 'http://localhost:8080/uploads/leina-utatane.jpg'),
-(18, 'http://localhost:8080/uploads/검정치마-antifreeze.jpg'),
-(19, 'http://localhost:8080/uploads/검정치마-lingling.jpg'),
-(20, 'http://localhost:8080/uploads/극동아시아타이거즈-다시,다시만나.jpg'),
-(21, 'http://localhost:8080/uploads/한로로-입춘.jpg');
+(1, '/uploads/oasis-don''t look back in anger.jpg'),
+(2, '/uploads/oasis-whatever.jpg'),
+(3, '/uploads/oasis-little by little.jpg'),
+(4, '/uploads/rhcp-can''t stop.jpg'),
+(5, '/uploads/the beatles-octopus''s garden.jpg'),
+(6, '/uploads/stevie wonder-i just called to say i love you.jpg'),
+(7, '/uploads/bon jovi-livin'' on a prayer.jpg'),
+(8, '/uploads/billyjoel-pianoman.jpg'),
+(9, '/uploads/maroon5-this love.jpg'),
+(10, '/uploads/harry styles-falling.jpg'),
+(11, '/uploads/greenday-last night on earth.jpg'),
+(12, '/uploads/coldplay-yellow.jpg'),
+(13, '/uploads/jason mraz-lucky.jpg'),
+(14, '/uploads/keira knightley-tell me if you wanna go home.jpg'),
+(15, '/uploads/aimyon-kimi wa rock wo kikanai.jpg'),
+(16, '/uploads/officialhigedandism-pretender.jpg'),
+(17, '/uploads/leina-utatane.jpg'),
+(18, '/uploads/검정치마-antifreeze.jpg'),
+(19, '/uploads/검정치마-lingling.jpg'),
+(20, '/uploads/극동아시아타이거즈-다시,다시만나.jpg'),
+(21, '/uploads/한로로-입춘.jpg');
 
 INSERT INTO post_likes (user_id, post_id, created_at)
 VALUES

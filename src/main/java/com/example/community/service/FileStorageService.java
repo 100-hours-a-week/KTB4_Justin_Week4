@@ -13,9 +13,6 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
-    @Value("${app.base-url:http://localhost:8080}")
-    private String baseUrl;
-
     @Value("${app.upload-dir:uploads}")
     private String uploadDir;
 
@@ -42,7 +39,7 @@ public class FileStorageService {
             throw new InvalidRequestException();
         }
 
-        String url = baseUrl + "/uploads/" + savedName;
+        String url = "/uploads/" + savedName;
 
         return new FileUploadResponse(url);
     }

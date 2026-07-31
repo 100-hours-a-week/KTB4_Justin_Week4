@@ -20,7 +20,6 @@ spring:
       mode: always
 
 app:
-  base-url: ${APP_BASE_URL:http://localhost:8080}
   upload-dir: ${UPLOAD_DIR:uploads}
 
 jwt:
