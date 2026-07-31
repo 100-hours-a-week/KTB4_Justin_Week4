@@ -1,30 +1,26 @@
 spring:
   application:
     name: community
+  profiles:
+    default: local
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
-  datasource:
-    url: jdbc:h2:mem:community
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-
-  h2:
-    console:
-      enabled: true
 
   jpa:
     hibernate:
       ddl-auto: create
     show-sql: true
     defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
 
 app:
-  base-url: http://localhost:8080
-  upload-dir: uploads
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 jwt:
-  secret-key: very-very-long-and-super-secret-key
-  access-token-expiration: 1800000
+  secret-key: ${JWT_SECRET:very-very-long-and-super-secret-key}
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:1800000}
