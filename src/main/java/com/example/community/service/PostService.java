@@ -3,6 +3,7 @@ package com.example.community.service;
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostResponse;
+import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
 import com.example.community.entity.PostImage;
 import com.example.community.entity.User;
@@ -39,14 +40,17 @@ public class PostService {
     @Transactional
     public PostResponse createPost(Long userId, CreatePostRequest request) {
         validateAuthenticatedUserId(userId);
-        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
+        validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
         User user = findActiveUser(userId);
+        Genre genre = request.getGenre();
 
         LocalDateTime now = LocalDateTime.now();
 
         Post post = new Post(
-                request.getTitle(),
+                request.getArtist(),
+                request.getTrackTitle(),
                 request.getContent(),
+                genre,
                 user,
                 now,
                 now
@@ -86,11 +90,14 @@ public class PostService {
         Post post = postRepository.findById(postId)
                 .orElseThrow(PostNotFoundException::new);
         validatePostOwner(post, userId);
-        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
+        validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
+        Genre genre = request.getGenre();
 
         post.update(
-                request.getTitle(),
+                request.getArtist(),
+                request.getTrackTitle(),
                 request.getContent(),
+                genre,
                 LocalDateTime.now()
         );
 
@@ -183,8 +190,9 @@ public class PostService {
         }
     }
 
-    private void validatePostValues(String title, String content, String imageUrl) {
-        if (title == null || title.isBlank() || title.length() > 100
+    private void validatePostValues(String artist, String trackTitle, String content, String imageUrl) {
+        if (artist == null || artist.isBlank() || artist.length() > 100
+                || trackTitle == null || trackTitle.isBlank() || trackTitle.length() > 200
                 || content == null || content.isBlank()) {
             throw new InvalidRequestException();
         }

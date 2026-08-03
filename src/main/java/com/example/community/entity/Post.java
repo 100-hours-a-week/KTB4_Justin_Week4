@@ -17,7 +17,14 @@ public class Post{
     private Long id;
 
     @Column(nullable = false, length = 100)
-    private String title;
+    private String artist;
+
+    @Column(name = "track_title", nullable = false, length = 200)
+    private String trackTitle;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private Genre genre;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
@@ -36,14 +43,18 @@ public class Post{
     private long viewCount = 0;
 
     public Post(
-            String title,
+            String artist,
+            String trackTitle,
             String content,
+            Genre genre,
             User user,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ){
-        this.title = title;
+        this.artist = artist;
+        this.trackTitle = trackTitle;
         this.content = content;
+        this.genre = genre;
         this.user = user;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -54,12 +65,16 @@ public class Post{
     }
 
     public void update(
-            String title,
+            String artist,
+            String trackTitle,
             String content,
+            Genre genre,
             LocalDateTime updatedAt
     ){
-        this.title = title;
+        this.artist = artist;
+        this.trackTitle = trackTitle;
         this.content = content;
+        this.genre = genre;
         this.updatedAt = updatedAt;
     }
 }
