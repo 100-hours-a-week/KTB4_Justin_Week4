@@ -57,7 +57,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/signup", "/auth/login", "/pages/posts", "/pages/post/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/posts", "/posts/*", "/posts/*/comments").permitAll()
+                .requestMatchers(HttpMethod.GET, "/posts", "/posts/*", "/posts/*/comments", "/genres").permitAll()
                 .requestMatchers(HttpMethod.POST, "/uploads").permitAll()
                 .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
                     .requestMatchers(
