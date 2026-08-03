@@ -16,7 +16,8 @@ public enum Genre {
     BALLAD("발라드"),
     CLASSICAL("클래식"),
     METAL("메탈"),
-    REGGAE("레게");
+    REGGAE("레게"),
+    ETC("기타");
 
     private final String displayName;
 
