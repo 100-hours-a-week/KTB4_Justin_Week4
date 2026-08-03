@@ -3,6 +3,7 @@ package com.example.community.service;
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostResponse;
+import com.example.community.dto.response.PageResponse;
 import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
 import com.example.community.entity.PostImage;
@@ -20,6 +21,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.net.URI;
@@ -63,15 +68,67 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> getPosts(Long userId) {
+    public PageResponse<PostResponse> getPosts(
+            Long userId,
+            int page,
+            int size,
+            Genre genre,
+            String sort
+    ) {
+        validatePageRequest(page, size);
+
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "createdAt")
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+        );
+        Page<Post> postPage;
+
+        if ("popular".equalsIgnoreCase(sort)) {
+            Pageable unsortedPageable = PageRequest.of(page, size);
+            postPage = genre == null
+                    ? postRepository.findAllOrderByLikeCount(unsortedPageable)
+                    : postRepository.findByGenreOrderByLikeCount(genre, unsortedPageable);
+        } else if (sort == null || "latest".equalsIgnoreCase(sort)) {
+            postPage = genre == null
+                    ? postRepository.findAll(pageable)
+                    : postRepository.findByGenre(genre, pageable);
+        } else {
+            throw new InvalidRequestException();
+        }
+
         Set<Long> likedPostIds = userId == null
                 ? Set.of()
                 : postLikeRepository.findLikedPostIdsByUserId(userId);
 
-        return postRepository.findAll()
-                .stream()
+        List<PostResponse> content = postPage.getContent().stream()
                 .map(post -> createPostResponse(post, likedPostIds.contains(post.getId())))
                 .toList();
+
+        return new PageResponse<>(postPage, content);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PostResponse> getLikedPosts(
+            Long userId,
+            int page,
+            int size,
+            Genre genre
+    ) {
+        validateAuthenticatedUserId(userId);
+        validatePageRequest(page, size);
+
+        Page<Post> postPage = postLikeRepository.findLikedPosts(
+                userId,
+                genre,
+                PageRequest.of(page, size)
+        );
+        List<PostResponse> content = postPage.getContent().stream()
+                .map(post -> createPostResponse(post, true))
+                .toList();
+
+        return new PageResponse<>(postPage, content);
     }
 
     @Transactional
@@ -187,6 +244,12 @@ public class PostService {
     private void validateAuthenticatedUserId(Long userId) {
         if (userId == null) {
             throw new AuthenticationRequiredException();
+        }
+    }
+
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new InvalidRequestException();
         }
     }
 
