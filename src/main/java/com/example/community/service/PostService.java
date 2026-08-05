@@ -204,14 +204,6 @@ public class PostService {
         return createPostResponse(post, imageUrl, liked);
     }
 
-    private PostResponse createPostResponse(Post post, boolean liked) {
-        String imageUrl = postImageRepository.findByPost(post)
-                .map(PostImage::getImageUrl)
-                .orElse(null);
-
-        return createPostResponse(post, imageUrl, liked);
-    }
-
     private PostResponse createPostResponse(Post post, String imageUrl, boolean liked) {
         return new PostResponse(
                 post,
