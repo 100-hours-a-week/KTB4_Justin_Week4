@@ -5,11 +5,20 @@ import com.example.community.entity.Genre;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+    @Override
+    @EntityGraph(attributePaths = "user")
+    Page<Post> findAll(Pageable pageable);
+
+    @EntityGraph(attributePaths = "user")
     Page<Post> findByGenre(Genre genre, Pageable pageable);
 
     @Query(
@@ -39,4 +48,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             @Param("genre") Genre genre,
             Pageable pageable
     );
+
+    @Query("SELECT post FROM Post post JOIN FETCH post.user WHERE post.id IN :postIds")
+    List<Post> findAllWithUserByIdIn(@Param("postIds") Collection<Long> postIds);
 }

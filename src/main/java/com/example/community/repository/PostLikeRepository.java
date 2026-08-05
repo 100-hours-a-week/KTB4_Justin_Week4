@@ -11,20 +11,32 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface PostLikeRepository extends JpaRepository<PostLike, Long>{
 
     boolean existsByPostAndUser(Post post, User user);
-    @Query("SELECT postLike.post.id FROM PostLike postLike WHERE postLike.user.id = :userId")
-    Set<Long> findLikedPostIdsByUserId(@Param("userId") Long userId);
+    @Query("""
+            SELECT postLike.post.id
+            FROM PostLike postLike
+            WHERE postLike.user.id = :userId
+              AND postLike.post.id IN :postIds
+            """)
+    Set<Long> findLikedPostIdsByUserIdAndPostIds(
+            @Param("userId") Long userId,
+            @Param("postIds") Collection<Long> postIds
+    );
 
     @Query(
             value = """
-                    SELECT postLike.post
+                    SELECT post
                     FROM PostLike postLike
+                    JOIN postLike.post post
+                    JOIN FETCH post.user
                     WHERE postLike.user.id = :userId
-                      AND (:genre IS NULL OR postLike.post.genre = :genre)
+                      AND (:genre IS NULL OR post.genre = :genre)
                     ORDER BY postLike.createdAt DESC, postLike.id DESC
                     """,
             countQuery = """
@@ -42,6 +54,15 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long>{
 
     Optional<PostLike> findByPostAndUser(Post post, User user);
     long countByPost(Post post);
+
+    @Query("""
+            SELECT postLike.post.id AS postId, COUNT(postLike.id) AS count
+            FROM PostLike postLike
+            WHERE postLike.post.id IN :postIds
+            GROUP BY postLike.post.id
+            """)
+    List<PostCountProjection> countByPostIds(@Param("postIds") Collection<Long> postIds);
+
     void deleteByPost(Post post);
     void deleteByUser(User user);
 }

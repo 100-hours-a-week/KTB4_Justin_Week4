@@ -7,7 +7,13 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
-@Table(name = "post_images")
+@Table(
+        name = "post_images",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_post_images_post_id",
+                columnNames = "post_id"
+        )
+)
 @Getter
 @NoArgsConstructor
 public class PostImage{
@@ -17,7 +23,7 @@ public class PostImage{
     private Long id;
 
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 

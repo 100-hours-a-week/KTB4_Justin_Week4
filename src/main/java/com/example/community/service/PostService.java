@@ -16,6 +16,7 @@ import com.example.community.repository.CommentRepository;
 import com.example.community.repository.PostImageRepository;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
+import com.example.community.repository.PostCountProjection;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +31,9 @@ import java.time.LocalDateTime;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Set;
 
 @Service
@@ -84,8 +88,9 @@ public class PostService {
                         .and(Sort.by(Sort.Direction.DESC, "id"))
         );
         Page<Post> postPage;
+        boolean popular = "popular".equalsIgnoreCase(sort);
 
-        if ("popular".equalsIgnoreCase(sort)) {
+        if (popular) {
             Pageable unsortedPageable = PageRequest.of(page, size);
             postPage = genre == null
                     ? postRepository.findAllOrderByLikeCount(unsortedPageable)
@@ -98,13 +103,15 @@ public class PostService {
             throw new InvalidRequestException();
         }
 
-        Set<Long> likedPostIds = userId == null
-                ? Set.of()
-                : postLikeRepository.findLikedPostIdsByUserId(userId);
+        // Popular ranking aggregates all likes first. Joining users into that aggregation
+        // makes MySQL join 50,000 authors before LIMIT. Load only the page authors instead.
+        if (popular && !postPage.isEmpty()) {
+            postRepository.findAllWithUserByIdIn(
+                    postPage.getContent().stream().map(Post::getId).toList()
+            );
+        }
 
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(post -> createPostResponse(post, likedPostIds.contains(post.getId())))
-                .toList();
+        List<PostResponse> content = createPostResponses(postPage.getContent(), userId, false);
 
         return new PageResponse<>(postPage, content);
     }
@@ -124,9 +131,7 @@ public class PostService {
                 genre,
                 PageRequest.of(page, size)
         );
-        List<PostResponse> content = postPage.getContent().stream()
-                .map(post -> createPostResponse(post, true))
-                .toList();
+        List<PostResponse> content = createPostResponses(postPage.getContent(), userId, true);
 
         return new PageResponse<>(postPage, content);
     }
@@ -216,6 +221,57 @@ public class PostService {
                 post.getViewCount(),
                 liked
         );
+    }
+
+    private List<PostResponse> createPostResponses(
+            List<Post> posts,
+            Long userId,
+            boolean allLiked
+    ) {
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .toList();
+
+        Map<Long, String> imageUrls = postImageRepository.findAllByPostIdIn(postIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        postImage -> postImage.getPost().getId(),
+                        PostImage::getImageUrl
+                ));
+        Map<Long, Long> likeCounts = toCountMap(postLikeRepository.countByPostIds(postIds));
+        Map<Long, Long> commentCounts = toCountMap(commentRepository.countByPostIds(postIds));
+
+        Set<Long> likedPostIds;
+        if (allLiked) {
+            likedPostIds = Set.copyOf(postIds);
+        } else if (userId == null) {
+            likedPostIds = Set.of();
+        } else {
+            likedPostIds = postLikeRepository.findLikedPostIdsByUserIdAndPostIds(userId, postIds);
+        }
+
+        return posts.stream()
+                .map(post -> new PostResponse(
+                        post,
+                        imageUrls.get(post.getId()),
+                        likeCounts.getOrDefault(post.getId(), 0L),
+                        commentCounts.getOrDefault(post.getId(), 0L),
+                        post.getViewCount(),
+                        likedPostIds.contains(post.getId())
+                ))
+                .toList();
+    }
+
+    private Map<Long, Long> toCountMap(Collection<PostCountProjection> counts) {
+        return counts.stream()
+                .collect(Collectors.toMap(
+                        PostCountProjection::getPostId,
+                        PostCountProjection::getCount
+                ));
     }
 
     private void saveImage(Post post, String imageUrl) {
