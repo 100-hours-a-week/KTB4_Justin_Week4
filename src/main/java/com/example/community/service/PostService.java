@@ -68,7 +68,7 @@ public class PostService {
         postRepository.save(post);
         saveImage(post, request.getImageUrl());
 
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional(readOnly = true)
@@ -138,18 +138,18 @@ public class PostService {
 
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
         post.increaseViewCount();
 
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional
     public PostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         validateAuthenticatedUserId(userId);
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
         validatePostOwner(post, userId);
         validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
@@ -167,7 +167,7 @@ public class PostService {
             replaceImage(post, request.getImageUrl());
         }
 
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional
@@ -186,7 +186,7 @@ public class PostService {
         }
     }
 
-    private PostResponse createPostResponse(Post post, Long userId) {
+    private PostResponse createSinglePostResponse(Post post, Long userId) {
         String imageUrl = postImageRepository.findByPost(post)
                 .map(PostImage::getImageUrl)
                 .orElse(null);
@@ -201,10 +201,6 @@ public class PostService {
             }
         }
 
-        return createPostResponse(post, imageUrl, liked);
-    }
-
-    private PostResponse createPostResponse(Post post, String imageUrl, boolean liked) {
         return new PostResponse(
                 post,
                 imageUrl,
