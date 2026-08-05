@@ -191,15 +191,8 @@ public class PostService {
                 .map(PostImage::getImageUrl)
                 .orElse(null);
 
-        boolean liked = false;
-
-        if (userId != null) {
-            User user = userRepository.findById(userId).orElse(null);
-
-            if (user != null) {
-                liked = postLikeRepository.existsByPostAndUser(post, user);
-            }
-        }
+        boolean liked = userId != null
+                && postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);
 
         return new PostResponse(
                 post,
