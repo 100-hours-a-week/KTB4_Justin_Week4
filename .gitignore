@@ -1,10 +1,7 @@
 HELP.md
 .DS_Store
 .env
-performance/reports/raw/
-performance/reports/*.json
-performance/reports/*.log
-performance/node_modules/
+
 /deploy/mysql/schema.sql
 .gradle
 build/
