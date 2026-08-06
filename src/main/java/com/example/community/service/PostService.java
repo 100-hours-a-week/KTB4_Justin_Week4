@@ -2,7 +2,8 @@ package com.example.community.service;
 
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
-import com.example.community.dto.response.PostResponse;
+import com.example.community.dto.response.PostDetailResponse;
+import com.example.community.dto.response.PostListResponse;
 import com.example.community.dto.response.PageResponse;
 import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
@@ -38,7 +39,7 @@ public class PostService {
     private final UserRepository userRepository;
 
     @Transactional
-    public PostResponse createPost(Long userId, CreatePostRequest request) {
+    public PostDetailResponse createPost(Long userId, CreatePostRequest request) {
         validateAuthenticatedUserId(userId);
         validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
         User user = findActiveUser(userId);
@@ -63,7 +64,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostResponse> getPosts(
+    public PageResponse<PostListResponse> getPosts(
             Long userId,
             int page,
             int size,
@@ -90,13 +91,13 @@ public class PostService {
                 ? postRepository.findAll(pageable)
                 : postRepository.findByGenre(genre, pageable);
 
-        List<PostResponse> content = createPostResponses(postPage.getContent(), userId, false);
+        List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, false);
 
         return new PageResponse<>(postPage, content);
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PostResponse> getLikedPosts(
+    public PageResponse<PostListResponse> getLikedPosts(
             Long userId,
             int page,
             int size,
@@ -110,13 +111,13 @@ public class PostService {
                 genre,
                 PageRequest.of(page, size)
         );
-        List<PostResponse> content = createPostResponses(postPage.getContent(), userId, true);
+        List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, true);
 
         return new PageResponse<>(postPage, content);
     }
 
     @Transactional
-    public PostResponse getPost(Long postId, Long userId) {
+    public PostDetailResponse getPost(Long postId, Long userId) {
         if (postRepository.incrementViewCount(postId) == 0) {
             throw new PostNotFoundException();
         }
@@ -128,7 +129,7 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
+    public PostDetailResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         validateAuthenticatedUserId(userId);
         Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
@@ -167,21 +168,14 @@ public class PostService {
         }
     }
 
-    private PostResponse createSinglePostResponse(Post post, Long userId) {
+    private PostDetailResponse createSinglePostResponse(Post post, Long userId) {
         boolean liked = userId != null
                 && postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);
 
-        return new PostResponse(
-                post,
-                post.getImageUrl(),
-                post.getLikeCount(),
-                post.getCommentCount(),
-                post.getViewCount(),
-                liked
-        );
+        return new PostDetailResponse(post, liked);
     }
 
-    private List<PostResponse> createPostResponses(
+    private List<PostListResponse> createPostResponses(
             List<Post> posts,
             Long userId,
             boolean allLiked
@@ -204,12 +198,8 @@ public class PostService {
         }
 
         return posts.stream()
-                .map(post -> new PostResponse(
+                .map(post -> new PostListResponse(
                         post,
-                        post.getImageUrl(),
-                        post.getLikeCount(),
-                        post.getCommentCount(),
-                        post.getViewCount(),
                         likedPostIds.contains(post.getId())
                 ))
                 .toList();

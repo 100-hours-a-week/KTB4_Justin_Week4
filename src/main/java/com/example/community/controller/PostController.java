@@ -2,7 +2,8 @@ package com.example.community.controller;
 
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
-import com.example.community.dto.response.PostResponse;
+import com.example.community.dto.response.PostDetailResponse;
+import com.example.community.dto.response.PostListResponse;
 import com.example.community.dto.response.PageResponse;
 import com.example.community.entity.Genre;
 import com.example.community.global.ApiResponse;
@@ -22,14 +23,14 @@ public class PostController {
     private final PostService postService;
 
     @GetMapping("")
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getPosts(
+    public ResponseEntity<ApiResponse<PageResponse<PostListResponse>>> getPosts(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Genre genre,
             @RequestParam(defaultValue = "latest") String sort
     ) {
-        PageResponse<PostResponse> response = postService.getPosts(
+        PageResponse<PostListResponse> response = postService.getPosts(
                 userId,
                 page,
                 size,
@@ -43,13 +44,13 @@ public class PostController {
     }
 
     @GetMapping("/liked")
-    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> getLikedPosts(
+    public ResponseEntity<ApiResponse<PageResponse<PostListResponse>>> getLikedPosts(
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Genre genre
     ) {
-        PageResponse<PostResponse> response = postService.getLikedPosts(
+        PageResponse<PostListResponse> response = postService.getLikedPosts(
                 userId,
                 page,
                 size,
@@ -62,11 +63,11 @@ public class PostController {
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<ApiResponse<PostResponse>> getPost(
+    public ResponseEntity<ApiResponse<PostDetailResponse>> getPost(
             @PathVariable Long postId,
             @AuthenticationPrincipal Long userId
     ) {
-        PostResponse response = postService.getPost(postId, userId);
+        PostDetailResponse response = postService.getPost(postId, userId);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("post_retrieved_success", response)
@@ -74,11 +75,11 @@ public class PostController {
     }
 
     @PostMapping("")
-    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+    public ResponseEntity<ApiResponse<PostDetailResponse>> createPost(
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody CreatePostRequest requestBody
     ) {
-        PostResponse response = postService.createPost(userId, requestBody);
+        PostDetailResponse response = postService.createPost(userId, requestBody);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>("post_created_success", response)
@@ -86,12 +87,12 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}")
-    public ResponseEntity<ApiResponse<PostResponse>> updatePost(
+    public ResponseEntity<ApiResponse<PostDetailResponse>> updatePost(
             @PathVariable Long postId,
             @AuthenticationPrincipal Long userId,
             @Valid @RequestBody UpdatePostRequest requestBody
     ) {
-        PostResponse response = postService.updatePost(postId, userId, requestBody);
+        PostDetailResponse response = postService.updatePost(postId, userId, requestBody);
 
         return ResponseEntity.ok(
                 new ApiResponse<>("post_updated_success", response)
