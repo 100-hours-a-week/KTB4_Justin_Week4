@@ -32,10 +32,9 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public List<CommentResponse> getComments(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
+        validatePostExists(postId);
 
-        return commentRepository.findAllByPost(post)
+        return commentRepository.findAllByPostId(postId)
                 .stream()
                 .map(CommentResponse::new)
                 .toList();
@@ -73,7 +72,7 @@ public class CommentService {
         validateAuthenticatedUserId(userId);
         validatePostExists(postId);
 
-        Comment comment = commentRepository.findById(commentId)
+        Comment comment = commentRepository.findDetailById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
         if (!comment.getPost().getId().equals(postId)) {

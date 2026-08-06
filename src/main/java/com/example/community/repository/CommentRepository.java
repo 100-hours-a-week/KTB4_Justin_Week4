@@ -9,11 +9,16 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface CommentRepository extends JpaRepository<Comment, Long>{
 
     @EntityGraph(attributePaths = "user")
-    List<Comment> findAllByPost(Post post);
+    @Query("SELECT comment FROM Comment comment WHERE comment.id = :commentId")
+    Optional<Comment> findDetailById(@Param("commentId") Long commentId);
+
+    @EntityGraph(attributePaths = "user")
+    List<Comment> findAllByPostId(Long postId);
 
     long countByPost(Post post);
 
