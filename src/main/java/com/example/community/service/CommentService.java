@@ -71,13 +71,12 @@ public class CommentService {
             UpdateCommentRequest request
     ) {
         validateAuthenticatedUserId(userId);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
+        validatePostExists(postId);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
-        if (!comment.getPost().getId().equals(post.getId())) {
+        if (!comment.getPost().getId().equals(postId)) {
             throw new CommentNotFoundException();
         }
         validateCommentOwner(comment, userId);
@@ -94,18 +93,23 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long postId, Long commentId, Long userId) {
         validateAuthenticatedUserId(userId);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(PostNotFoundException::new);
+        validatePostExists(postId);
 
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(CommentNotFoundException::new);
 
-        if (!comment.getPost().getId().equals(post.getId())) {
+        if (!comment.getPost().getId().equals(postId)) {
             throw new CommentNotFoundException();
         }
         validateCommentOwner(comment, userId);
 
         commentRepository.delete(comment);
+    }
+
+    private void validatePostExists(Long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new PostNotFoundException();
+        }
     }
 
     private void validateCommentOwner(Comment comment, Long userId) {
