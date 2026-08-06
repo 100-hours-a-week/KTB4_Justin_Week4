@@ -55,16 +55,9 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long>{
     );
 
     Optional<PostLike> findByPostAndUser(Post post, User user);
-    long countByPost(Post post);
 
-    @Query("""
-            SELECT postLike.post.id AS postId, COUNT(postLike.id) AS count
-            FROM PostLike postLike
-            WHERE postLike.post.id IN :postIds
-            GROUP BY postLike.post.id
-            """)
-    List<PostCountProjection> countByPostIds(@Param("postIds") Collection<Long> postIds);
+    @Query("SELECT postLike.post.id FROM PostLike postLike WHERE postLike.user.id = :userId")
+    List<Long> findPostIdsByUserId(@Param("userId") Long userId);
 
-    void deleteByPost(Post post);
     void deleteByUser(User user);
 }

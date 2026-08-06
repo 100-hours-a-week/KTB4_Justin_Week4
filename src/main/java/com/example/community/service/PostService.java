@@ -6,17 +6,13 @@ import com.example.community.dto.response.PostResponse;
 import com.example.community.dto.response.PageResponse;
 import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
-import com.example.community.entity.PostImage;
 import com.example.community.entity.User;
 import com.example.community.exception.AuthenticationRequiredException;
 import com.example.community.exception.InvalidRequestException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
-import com.example.community.repository.CommentRepository;
-import com.example.community.repository.PostImageRepository;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
-import com.example.community.repository.PostCountProjection;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -31,9 +27,6 @@ import java.time.LocalDateTime;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Collection;
-import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.Set;
 
 @Service
@@ -41,9 +34,7 @@ import java.util.Set;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final PostImageRepository postImageRepository;
     private final PostLikeRepository postLikeRepository;
-    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -61,12 +52,12 @@ public class PostService {
                 request.getContent(),
                 genre,
                 user,
+                request.getImageUrl(),
                 now,
                 now
         );
 
         postRepository.save(post);
-        saveImage(post, request.getImageUrl());
 
         return createSinglePostResponse(post, userId);
     }
@@ -81,35 +72,23 @@ public class PostService {
     ) {
         validatePageRequest(page, size);
 
-        Pageable pageable = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-                        .and(Sort.by(Sort.Direction.DESC, "id"))
-        );
-        Page<Post> postPage;
         boolean popular = "popular".equalsIgnoreCase(sort);
+        boolean latest = sort == null || "latest".equalsIgnoreCase(sort);
 
-        if (popular) {
-            Pageable unsortedPageable = PageRequest.of(page, size);
-            postPage = genre == null
-                    ? postRepository.findAllOrderByLikeCount(unsortedPageable)
-                    : postRepository.findByGenreOrderByLikeCount(genre, unsortedPageable);
-        } else if (sort == null || "latest".equalsIgnoreCase(sort)) {
-            postPage = genre == null
-                    ? postRepository.findAll(pageable)
-                    : postRepository.findByGenre(genre, pageable);
-        } else {
+        if (!popular && !latest) {
             throw new InvalidRequestException();
         }
 
-        // Popular ranking aggregates all likes first. Joining users into that aggregation
-        // makes MySQL join 50,000 authors before LIMIT. Load only the page authors instead.
-        if (popular && !postPage.isEmpty()) {
-            postRepository.findAllWithUserByIdIn(
-                    postPage.getContent().stream().map(Post::getId).toList()
-            );
-        }
+        Sort postSort = popular
+                ? Sort.by(Sort.Direction.DESC, "likeCount")
+                        .and(Sort.by(Sort.Direction.DESC, "createdAt"))
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+                : Sort.by(Sort.Direction.DESC, "createdAt")
+                        .and(Sort.by(Sort.Direction.DESC, "id"));
+        Pageable pageable = PageRequest.of(page, size, postSort);
+        Page<Post> postPage = genre == null
+                ? postRepository.findAll(pageable)
+                : postRepository.findByGenre(genre, pageable);
 
         List<PostResponse> content = createPostResponses(postPage.getContent(), userId, false);
 
@@ -138,10 +117,12 @@ public class PostService {
 
     @Transactional
     public PostResponse getPost(Long postId, Long userId) {
+        if (postRepository.incrementViewCount(postId) == 0) {
+            throw new PostNotFoundException();
+        }
+
         Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
-
-        post.increaseViewCount();
 
         return createSinglePostResponse(post, userId);
     }
@@ -164,7 +145,7 @@ public class PostService {
         );
 
         if (request.getImageUrl() != null) {
-            replaceImage(post, request.getImageUrl());
+            post.updateImage(request.getImageUrl());
         }
 
         return createSinglePostResponse(post, userId);
@@ -187,18 +168,14 @@ public class PostService {
     }
 
     private PostResponse createSinglePostResponse(Post post, Long userId) {
-        String imageUrl = postImageRepository.findByPost(post)
-                .map(PostImage::getImageUrl)
-                .orElse(null);
-
         boolean liked = userId != null
                 && postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);
 
         return new PostResponse(
                 post,
-                imageUrl,
-                postLikeRepository.countByPost(post),
-                commentRepository.countByPost(post),
+                post.getImageUrl(),
+                post.getLikeCount(),
+                post.getCommentCount(),
                 post.getViewCount(),
                 liked
         );
@@ -217,15 +194,6 @@ public class PostService {
                 .map(Post::getId)
                 .toList();
 
-        Map<Long, String> imageUrls = postImageRepository.findAllByPostIdIn(postIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        postImage -> postImage.getPost().getId(),
-                        PostImage::getImageUrl
-                ));
-        Map<Long, Long> likeCounts = toCountMap(postLikeRepository.countByPostIds(postIds));
-        Map<Long, Long> commentCounts = toCountMap(commentRepository.countByPostIds(postIds));
-
         Set<Long> likedPostIds;
         if (allLiked) {
             likedPostIds = Set.copyOf(postIds);
@@ -238,34 +206,13 @@ public class PostService {
         return posts.stream()
                 .map(post -> new PostResponse(
                         post,
-                        imageUrls.get(post.getId()),
-                        likeCounts.getOrDefault(post.getId(), 0L),
-                        commentCounts.getOrDefault(post.getId(), 0L),
+                        post.getImageUrl(),
+                        post.getLikeCount(),
+                        post.getCommentCount(),
                         post.getViewCount(),
                         likedPostIds.contains(post.getId())
                 ))
                 .toList();
-    }
-
-    private Map<Long, Long> toCountMap(Collection<PostCountProjection> counts) {
-        return counts.stream()
-                .collect(Collectors.toMap(
-                        PostCountProjection::getPostId,
-                        PostCountProjection::getCount
-                ));
-    }
-
-    private void saveImage(Post post, String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) {
-            return;
-        }
-        postImageRepository.save(new PostImage(post, imageUrl));
-    }
-
-    private void replaceImage(Post post, String imageUrl) {
-        postImageRepository.deleteByPost(post);
-        postImageRepository.flush();
-        saveImage(post, imageUrl);
     }
 
     private User findActiveUser(Long userId) {

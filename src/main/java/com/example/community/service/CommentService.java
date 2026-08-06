@@ -74,7 +74,8 @@ public class CommentService {
                 LocalDateTime.now()
         );
 
-        commentRepository.save(comment);
+        commentRepository.saveAndFlush(comment);
+        postRepository.incrementCommentCount(postId);
 
         return new CommentResponse(comment);
     }
@@ -120,6 +121,8 @@ public class CommentService {
         validateCommentOwner(comment, userId);
 
         commentRepository.delete(comment);
+        commentRepository.flush();
+        postRepository.decrementCommentCount(postId);
     }
 
     private void validatePostExists(Long postId) {

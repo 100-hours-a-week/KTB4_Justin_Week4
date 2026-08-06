@@ -6,18 +6,61 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
     @EntityGraph(attributePaths = "user")
-    @Query("SELECT post FROM Post post WHERE post.id = :postId")
-    Optional<Post> findDetailById(@Param("postId") Long postId);
+    Optional<Post> findDetailById(Long postId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE Post post SET post.viewCount = post.viewCount + 1 WHERE post.id = :postId")
+    int incrementViewCount(@Param("postId") Long postId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE Post post SET post.likeCount = post.likeCount + 1 WHERE post.id = :postId")
+    int incrementLikeCount(@Param("postId") Long postId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Post post
+            SET post.likeCount = CASE
+                WHEN post.likeCount > 0 THEN post.likeCount - 1
+                ELSE 0
+            END
+            WHERE post.id = :postId
+            """)
+    int decrementLikeCount(@Param("postId") Long postId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Post post
+            SET post.likeCount = CASE
+                WHEN post.likeCount > 0 THEN post.likeCount - 1
+                ELSE 0
+            END
+            WHERE post.id IN :postIds
+            """)
+    int decrementLikeCounts(@Param("postIds") java.util.Collection<Long> postIds);
+
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE Post post SET post.commentCount = post.commentCount + 1 WHERE post.id = :postId")
+    int incrementCommentCount(@Param("postId") Long postId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE Post post
+            SET post.commentCount = CASE
+                WHEN post.commentCount > 0 THEN post.commentCount - 1
+                ELSE 0
+            END
+            WHERE post.id = :postId
+            """)
+    int decrementCommentCount(@Param("postId") Long postId);
 
     @Override
     @EntityGraph(attributePaths = "user")
@@ -26,34 +69,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @EntityGraph(attributePaths = "user")
     Page<Post> findByGenre(Genre genre, Pageable pageable);
 
-    @Query(
-            value = """
-                    SELECT post
-                    FROM Post post
-                    LEFT JOIN PostLike postLike ON postLike.post = post
-                    GROUP BY post
-                    ORDER BY COUNT(postLike.id) DESC, post.createdAt DESC, post.id DESC
-                    """,
-            countQuery = "SELECT COUNT(post) FROM Post post"
-    )
-    Page<Post> findAllOrderByLikeCount(Pageable pageable);
-
-    @Query(
-            value = """
-                    SELECT post
-                    FROM Post post
-                    LEFT JOIN PostLike postLike ON postLike.post = post
-                    WHERE post.genre = :genre
-                    GROUP BY post
-                    ORDER BY COUNT(postLike.id) DESC, post.createdAt DESC, post.id DESC
-                    """,
-            countQuery = "SELECT COUNT(post) FROM Post post WHERE post.genre = :genre"
-    )
-    Page<Post> findByGenreOrderByLikeCount(
-            @Param("genre") Genre genre,
-            Pageable pageable
-    );
-
-    @Query("SELECT post FROM Post post JOIN FETCH post.user WHERE post.id IN :postIds")
-    List<Post> findAllWithUserByIdIn(@Param("postIds") Collection<Long> postIds);
 }
