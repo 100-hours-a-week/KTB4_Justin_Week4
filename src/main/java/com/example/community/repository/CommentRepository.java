@@ -2,6 +2,8 @@ package com.example.community.repository;
 
 import com.example.community.entity.Comment;
 import com.example.community.entity.Post;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +20,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long>{
     Optional<Comment> findDetailById(@Param("commentId") Long commentId);
 
     @EntityGraph(attributePaths = "user")
-    List<Comment> findAllByPostId(Long postId);
+    Page<Comment> findAllByPostId(Long postId, Pageable pageable);
 
     long countByPost(Post post);
 
