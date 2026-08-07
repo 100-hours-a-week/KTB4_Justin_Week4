@@ -2,16 +2,16 @@ package com.example.community.service;
 
 import com.example.community.dto.request.CreatePostRequest;
 import com.example.community.dto.request.UpdatePostRequest;
-import com.example.community.dto.response.PostResponse;
+import com.example.community.dto.response.PostDetailResponse;
+import com.example.community.dto.response.PostListResponse;
+import com.example.community.dto.response.PageResponse;
+import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
-import com.example.community.entity.PostImage;
 import com.example.community.entity.User;
 import com.example.community.exception.AuthenticationRequiredException;
 import com.example.community.exception.InvalidRequestException;
 import com.example.community.exception.PostNotFoundException;
 import com.example.community.exception.UserNotFoundException;
-import com.example.community.repository.CommentRepository;
-import com.example.community.repository.PostImageRepository;
 import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
@@ -19,6 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.net.URI;
@@ -31,74 +35,121 @@ import java.util.Set;
 public class PostService {
 
     private final PostRepository postRepository;
-    private final PostImageRepository postImageRepository;
     private final PostLikeRepository postLikeRepository;
-    private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
     @Transactional
-    public PostResponse createPost(Long userId, CreatePostRequest request) {
+    public PostDetailResponse createPost(Long userId, CreatePostRequest request) {
         validateAuthenticatedUserId(userId);
-        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
+        validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
         User user = findActiveUser(userId);
+        Genre genre = request.getGenre();
 
         LocalDateTime now = LocalDateTime.now();
 
         Post post = new Post(
-                request.getTitle(),
+                request.getArtist(),
+                request.getTrackTitle(),
                 request.getContent(),
+                genre,
                 user,
+                request.getImageUrl(),
                 now,
                 now
         );
 
         postRepository.save(post);
-        saveImage(post, request.getImageUrl());
 
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> getPosts(Long userId) {
-        Set<Long> likedPostIds = userId == null
-                ? Set.of()
-                : postLikeRepository.findLikedPostIdsByUserId(userId);
+    public PageResponse<PostListResponse> getPosts(
+            Long userId,
+            int page,
+            int size,
+            Genre genre,
+            String sort
+    ) {
+        validatePageRequest(page, size);
 
-        return postRepository.findAll()
-                .stream()
-                .map(post -> createPostResponse(post, likedPostIds.contains(post.getId())))
-                .toList();
+        boolean popular = "popular".equalsIgnoreCase(sort);
+        boolean latest = sort == null || "latest".equalsIgnoreCase(sort);
+
+        if (!popular && !latest) {
+            throw new InvalidRequestException();
+        }
+
+        Sort postSort = popular
+                ? Sort.by(Sort.Direction.DESC, "likeCount")
+                        .and(Sort.by(Sort.Direction.DESC, "createdAt"))
+                        .and(Sort.by(Sort.Direction.DESC, "id"))
+                : Sort.by(Sort.Direction.DESC, "createdAt")
+                        .and(Sort.by(Sort.Direction.DESC, "id"));
+        Pageable pageable = PageRequest.of(page, size, postSort);
+        Page<Post> postPage = genre == null
+                ? postRepository.findAll(pageable)
+                : postRepository.findByGenre(genre, pageable);
+
+        List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, false);
+
+        return new PageResponse<>(postPage, content);
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<PostListResponse> getLikedPosts(
+            Long userId,
+            int page,
+            int size,
+            Genre genre
+    ) {
+        validateAuthenticatedUserId(userId);
+        validatePageRequest(page, size);
+
+        Page<Post> postPage = postLikeRepository.findLikedPosts(
+                userId,
+                genre,
+                PageRequest.of(page, size)
+        );
+        List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, true);
+
+        return new PageResponse<>(postPage, content);
     }
 
     @Transactional
-    public PostResponse getPost(Long postId, Long userId) {
-        Post post = postRepository.findById(postId)
+    public PostDetailResponse getPost(Long postId, Long userId) {
+        if (postRepository.incrementViewCount(postId) == 0) {
+            throw new PostNotFoundException();
+        }
+
+        Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
 
-        post.increaseViewCount();
-
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional
-    public PostResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
+    public PostDetailResponse updatePost(Long postId, Long userId, UpdatePostRequest request) {
         validateAuthenticatedUserId(userId);
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findDetailById(postId)
                 .orElseThrow(PostNotFoundException::new);
         validatePostOwner(post, userId);
-        validatePostValues(request.getTitle(), request.getContent(), request.getImageUrl());
+        validatePostValues(request.getArtist(), request.getTrackTitle(), request.getContent(), request.getImageUrl());
+        Genre genre = request.getGenre();
 
         post.update(
-                request.getTitle(),
+                request.getArtist(),
+                request.getTrackTitle(),
                 request.getContent(),
+                genre,
                 LocalDateTime.now()
         );
 
         if (request.getImageUrl() != null) {
-            replaceImage(post, request.getImageUrl());
+            post.updateImage(request.getImageUrl());
         }
 
-        return createPostResponse(post, userId);
+        return createSinglePostResponse(post, userId);
     }
 
     @Transactional
@@ -117,54 +168,41 @@ public class PostService {
         }
     }
 
-    private PostResponse createPostResponse(Post post, Long userId) {
-        String imageUrl = postImageRepository.findByPost(post)
-                .map(PostImage::getImageUrl)
-                .orElse(null);
+    private PostDetailResponse createSinglePostResponse(Post post, Long userId) {
+        boolean liked = userId != null
+                && postLikeRepository.existsByPostIdAndUserId(post.getId(), userId);
 
-        boolean liked = false;
+        return new PostDetailResponse(post, liked);
+    }
 
-        if (userId != null) {
-            User user = userRepository.findById(userId).orElse(null);
-
-            if (user != null) {
-                liked = postLikeRepository.existsByPostAndUser(post, user);
-            }
+    private List<PostListResponse> createPostResponses(
+            List<Post> posts,
+            Long userId,
+            boolean allLiked
+    ) {
+        if (posts.isEmpty()) {
+            return List.of();
         }
 
-        return createPostResponse(post, imageUrl, liked);
-    }
+        List<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .toList();
 
-    private PostResponse createPostResponse(Post post, boolean liked) {
-        String imageUrl = postImageRepository.findByPost(post)
-                .map(PostImage::getImageUrl)
-                .orElse(null);
-
-        return createPostResponse(post, imageUrl, liked);
-    }
-
-    private PostResponse createPostResponse(Post post, String imageUrl, boolean liked) {
-        return new PostResponse(
-                post,
-                imageUrl,
-                postLikeRepository.countByPost(post),
-                commentRepository.countByPost(post),
-                post.getViewCount(),
-                liked
-        );
-    }
-
-    private void saveImage(Post post, String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) {
-            return;
+        Set<Long> likedPostIds;
+        if (allLiked) {
+            likedPostIds = Set.copyOf(postIds);
+        } else if (userId == null) {
+            likedPostIds = Set.of();
+        } else {
+            likedPostIds = postLikeRepository.findLikedPostIdsByUserIdAndPostIds(userId, postIds);
         }
-        postImageRepository.save(new PostImage(post, imageUrl));
-    }
 
-    private void replaceImage(Post post, String imageUrl) {
-        postImageRepository.deleteByPost(post);
-        postImageRepository.flush();
-        saveImage(post, imageUrl);
+        return posts.stream()
+                .map(post -> new PostListResponse(
+                        post,
+                        likedPostIds.contains(post.getId())
+                ))
+                .toList();
     }
 
     private User findActiveUser(Long userId) {
@@ -183,8 +221,15 @@ public class PostService {
         }
     }
 
-    private void validatePostValues(String title, String content, String imageUrl) {
-        if (title == null || title.isBlank() || title.length() > 100
+    private void validatePageRequest(int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new InvalidRequestException();
+        }
+    }
+
+    private void validatePostValues(String artist, String trackTitle, String content, String imageUrl) {
+        if (artist == null || artist.isBlank() || artist.length() > 100
+                || trackTitle == null || trackTitle.isBlank() || trackTitle.length() > 200
                 || content == null || content.isBlank()) {
             throw new InvalidRequestException();
         }

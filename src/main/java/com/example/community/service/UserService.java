@@ -8,6 +8,7 @@ import com.example.community.entity.User;
 import com.example.community.exception.NicknameAlreadyExistsException;
 import com.example.community.exception.UserNotFoundException;
 import com.example.community.repository.PostLikeRepository;
+import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,6 +24,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
+    private final PostRepository postRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -73,7 +75,12 @@ public class UserService {
             return;
         }
 
+        List<Long> likedPostIds = postLikeRepository.findPostIdsByUserId(userId);
         postLikeRepository.deleteByUser(user);
+
+        if (!likedPostIds.isEmpty()) {
+            postRepository.decrementLikeCounts(likedPostIds);
+        }
         user.withdraw();
     }
 

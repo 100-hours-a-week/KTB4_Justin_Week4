@@ -12,6 +12,7 @@ import com.example.community.repository.PostLikeRepository;
 import com.example.community.repository.PostRepository;
 import com.example.community.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +38,13 @@ public class PostLikeService {
             throw new AlreadyLikedException();
         }
 
-        postLikeRepository.save(new PostLike(user, post, LocalDateTime.now()));
+        try {
+            postLikeRepository.saveAndFlush(new PostLike(user, post, LocalDateTime.now()));
+        } catch (DataIntegrityViolationException exception) {
+            throw new AlreadyLikedException();
+        }
+
+        postRepository.incrementLikeCount(postId);
     }
 
     @Transactional
@@ -52,6 +59,8 @@ public class PostLikeService {
                 .orElseThrow(LikeNotFoundException::new);
 
         postLikeRepository.delete(postLike);
+        postLikeRepository.flush();
+        postRepository.decrementLikeCount(postId);
     }
 
     private User findActiveUser(Long userId) {
