@@ -28,14 +28,16 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Genre genre,
-            @RequestParam(defaultValue = "latest") String sort
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(required = false) String keyword
     ) {
         PageResponse<PostListResponse> response = postService.getPosts(
                 userId,
                 page,
                 size,
                 genre,
-                sort
+                sort,
+                keyword
         );
 
         return ResponseEntity.ok(
@@ -48,13 +50,15 @@ public class PostController {
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Genre genre
+            @RequestParam(required = false) Genre genre,
+            @RequestParam(required = false) String keyword
     ) {
         PageResponse<PostListResponse> response = postService.getLikedPosts(
                 userId,
                 page,
                 size,
-                genre
+                genre,
+                keyword
         );
 
         return ResponseEntity.ok(

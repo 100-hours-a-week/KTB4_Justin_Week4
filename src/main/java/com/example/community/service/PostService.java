@@ -69,7 +69,8 @@ public class PostService {
             int page,
             int size,
             Genre genre,
-            String sort
+            String sort,
+            String keyword
     ) {
         validatePageRequest(page, size);
 
@@ -101,7 +102,8 @@ public class PostService {
             Long userId,
             int page,
             int size,
-            Genre genre
+            Genre genre,
+            String keyword
     ) {
         validateAuthenticatedUserId(userId);
         validatePageRequest(page, size);
