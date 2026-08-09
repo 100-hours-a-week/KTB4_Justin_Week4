@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
@@ -68,5 +69,47 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @EntityGraph(attributePaths = "user")
     Page<Post> findByGenre(Genre genre, Pageable pageable);
+    @Query(
+            value = """
+                SELECT post
+                FROM Post post
+                JOIN FETCH post.user author
+                WHERE (:genre IS NULL OR post.genre = :genre)
+                  AND (
+                      LOWER(post.artist) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      OR LOWER(post.trackTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      OR LOWER(author.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                  )
+                """,
+            countQuery = """
+                SELECT COUNT(post)
+                FROM Post post
+                JOIN post.user author
+                WHERE (:genre IS NULL OR post.genre = :genre)
+                  AND (
+                      LOWER(post.artist) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      OR LOWER(post.trackTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      OR LOWER(author.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                  )
+                """
+    )
+    Page<Post> searchPosts(
+            @Param("keyword") String keyword,
+            @Param("genre") Genre genre,
+            Pageable pageable
+    );
 
+    @Query("""
+            SELECT post
+            FROM Post post
+            JOIN FETCH post.user author
+            WHERE LOWER(post.artist) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(post.trackTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))
+               OR LOWER(author.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            ORDER BY post.createdAt DESC, post.id DESC
+            """)
+    List<Post> findSuggestions(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 }

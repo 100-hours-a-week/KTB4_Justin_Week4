@@ -5,6 +5,7 @@ import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostDetailResponse;
 import com.example.community.dto.response.PostListResponse;
 import com.example.community.dto.response.PageResponse;
+import com.example.community.dto.response.PostSuggestionResponse;
 import com.example.community.entity.Genre;
 import com.example.community.global.ApiResponse;
 import com.example.community.service.PostService;
@@ -14,6 +15,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
@@ -28,14 +31,16 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Genre genre,
-            @RequestParam(defaultValue = "latest") String sort
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(required = false) String keyword
     ) {
         PageResponse<PostListResponse> response = postService.getPosts(
                 userId,
                 page,
                 size,
                 genre,
-                sort
+                sort,
+                keyword
         );
 
         return ResponseEntity.ok(
@@ -48,17 +53,31 @@ public class PostController {
             @AuthenticationPrincipal Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Genre genre
+            @RequestParam(required = false) Genre genre,
+            @RequestParam(required = false) String keyword
     ) {
         PageResponse<PostListResponse> response = postService.getLikedPosts(
                 userId,
                 page,
                 size,
-                genre
+                genre,
+                keyword
         );
 
         return ResponseEntity.ok(
                 new ApiResponse<>("liked_posts_retrieved_success", response)
+        );
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<ApiResponse<List<PostSuggestionResponse>>> getPostSuggestions(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        List<PostSuggestionResponse> response = postService.getPostSuggestions(keyword, size);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>("post_suggestions_retrieved_success", response)
         );
     }
 
