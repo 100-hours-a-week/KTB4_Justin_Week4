@@ -88,10 +88,19 @@ public class PostService {
                 : Sort.by(Sort.Direction.DESC, "createdAt")
                         .and(Sort.by(Sort.Direction.DESC, "id"));
         Pageable pageable = PageRequest.of(page, size, postSort);
-        Page<Post> postPage = genre == null
-                ? postRepository.findAll(pageable)
-                : postRepository.findByGenre(genre, pageable);
+        Page<Post> postPage;
 
+        if (keyword != null && !keyword.isBlank()) {
+            postPage = postRepository.searchPosts(
+                    keyword.trim(),
+                    genre,
+                    pageable
+            );
+        } else {
+            postPage = genre == null
+                    ? postRepository.findAll(pageable)
+                    : postRepository.findByGenre(genre, pageable);
+        }
         List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, false);
 
         return new PageResponse<>(postPage, content);
@@ -108,9 +117,14 @@ public class PostService {
         validateAuthenticatedUserId(userId);
         validatePageRequest(page, size);
 
+        String normalizedKeyword = keyword == null || keyword.isBlank()
+                ? null
+                : keyword.trim();
+
         Page<Post> postPage = postLikeRepository.findLikedPosts(
                 userId,
                 genre,
+                normalizedKeyword,
                 PageRequest.of(page, size)
         );
         List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, true);

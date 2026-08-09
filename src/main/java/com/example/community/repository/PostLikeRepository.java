@@ -36,21 +36,36 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long>{
                     SELECT post
                     FROM PostLike postLike
                     JOIN postLike.post post
-                    JOIN FETCH post.user
+                    JOIN FETCH post.user author
                     WHERE postLike.user.id = :userId
                       AND (:genre IS NULL OR post.genre = :genre)
+                      AND (
+                          :keyword IS NULL
+                          OR LOWER(post.artist) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                          OR LOWER(post.trackTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                          OR LOWER(author.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      )
                     ORDER BY postLike.createdAt DESC, postLike.id DESC
                     """,
             countQuery = """
                     SELECT COUNT(postLike)
                     FROM PostLike postLike
+                    JOIN postLike.post post
+                    JOIN post.user author
                     WHERE postLike.user.id = :userId
-                      AND (:genre IS NULL OR postLike.post.genre = :genre)
+                      AND (:genre IS NULL OR post.genre = :genre)
+                      AND (
+                          :keyword IS NULL
+                          OR LOWER(post.artist) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                          OR LOWER(post.trackTitle) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                          OR LOWER(author.nickname) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                      )
                     """
     )
     Page<Post> findLikedPosts(
             @Param("userId") Long userId,
             @Param("genre") Genre genre,
+            @Param("keyword") String keyword,
             Pageable pageable
     );
 
