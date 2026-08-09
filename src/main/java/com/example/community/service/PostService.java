@@ -5,6 +5,7 @@ import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostDetailResponse;
 import com.example.community.dto.response.PostListResponse;
 import com.example.community.dto.response.PageResponse;
+import com.example.community.dto.response.PostSuggestionResponse;
 import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
 import com.example.community.entity.User;
@@ -35,6 +36,7 @@ import java.util.Set;
 public class PostService {
     private static final int MIN_SEARCH_KEYWORD_LENGTH = 2;
     private static final int MAX_SEARCH_KEYWORD_LENGTH = 50;
+    private static final int MAX_SUGGESTION_SIZE = 5;
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
@@ -131,6 +133,20 @@ public class PostService {
         List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, true);
 
         return new PageResponse<>(postPage, content);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostSuggestionResponse> getPostSuggestions(String keyword, int size) {
+        String normalizedKeyword = requireKeyword(keyword);
+        validateSuggestionSize(size);
+
+        return postRepository.findSuggestions(
+                        normalizedKeyword,
+                        PageRequest.of(0, size)
+                )
+                .stream()
+                .map(PostSuggestionResponse::new)
+                .toList();
     }
 
     @Transactional
@@ -297,5 +313,21 @@ public class PostService {
         }
 
         return normalizedKeyword;
+    }
+
+    private String requireKeyword(String keyword) {
+        String normalizedKeyword = normalizeKeyword(keyword);
+
+        if (normalizedKeyword == null) {
+            throw new InvalidRequestException();
+        }
+
+        return normalizedKeyword;
+    }
+
+    private void validateSuggestionSize(int size) {
+        if (size < 1 || size > MAX_SUGGESTION_SIZE) {
+            throw new InvalidRequestException();
+        }
     }
 }
