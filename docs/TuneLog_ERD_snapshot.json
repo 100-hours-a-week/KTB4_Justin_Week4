@@ -65,20 +65,6 @@
           "relFieldId": null,
           "relType": null,
           "relGroupId": null
-        },
-        {
-          "_id": "4ad377b8a3f797df3",
-          "name": "탈퇴 시각",
-          "pName": "withdrawn_at",
-          "domain": "",
-          "type": "DATETIME(6)",
-          "defaultValue": "",
-          "isAllowNull": true,
-          "comment": "",
-          "relEntity": null,
-          "relFieldId": null,
-          "relType": null,
-          "relGroupId": null
         }
       ],
       "keys": {

@@ -137,7 +137,7 @@ GET /posts?page=0&size=10&genre=ROCK&sort=popular&keyword=oasis
 ## 데이터베이스 설계
 
 <p align="center">
-  <img src="docs/images/tunelog-erd.png" alt="TuneLog ERD" width="100%" />
+  <img src="docs/images/tunelog-erd.svg" alt="TuneLog ERD" width="100%" />
 </p>
 
 - [ERD 스냅샷 원본](docs/TuneLog_ERD_snapshot.json)
