@@ -71,7 +71,7 @@ public class PostController {
 
     @GetMapping("/suggestions")
     public ResponseEntity<ApiResponse<List<PostSuggestionResponse>>> getPostSuggestions(
-            @RequestParam String keyword,
+            @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "5") int size
     ) {
         List<PostSuggestionResponse> response = postService.getPostSuggestions(keyword, size);
