@@ -1,0 +1,473 @@
+{
+  "entityData": [
+    {
+      "_id": "071e1f937b82c89af",
+      "_diagramId": "e6ee13af40c122418",
+      "position": {
+        "x": 220,
+        "y": 220
+      },
+      "name": "회원",
+      "pName": "users",
+      "fields": [
+        {
+          "_id": "4b68eabfc9fc7a90c",
+          "name": "이메일",
+          "pName": "email",
+          "domain": "",
+          "type": "VARCHAR(255)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "UNIQUE",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "f988dfb49291f9f8c",
+          "name": "비밀번호",
+          "pName": "password",
+          "domain": "",
+          "type": "VARCHAR(255)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "BCrypt 해시",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "78e0964622d105833",
+          "name": "닉네임",
+          "pName": "nickname",
+          "domain": "",
+          "type": "VARCHAR(10)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "UNIQUE",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "643b435ae8ecedefe",
+          "name": "프로필 이미지",
+          "pName": "profile_image",
+          "domain": "",
+          "type": "VARCHAR(500)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "4ad377b8a3f797df3",
+          "name": "탈퇴 시각",
+          "pName": "withdrawn_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": true,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        }
+      ],
+      "keys": {
+        "pks": [
+          {
+            "_id": "da089850eaab49c28",
+            "name": "아이디",
+            "pName": "id",
+            "domain": "",
+            "type": "BIGINT",
+            "defaultValue": "",
+            "isAllowNull": false,
+            "comment": "",
+            "relEntity": null,
+            "relFieldId": null,
+            "relType": null,
+            "relGroupId": null
+          }
+        ],
+        "fks": []
+      },
+      "color": "rgba(10, 10, 10, 0.5)"
+    },
+    {
+      "_id": "ffc66e546e273dc4c",
+      "_diagramId": "e6ee13af40c122418",
+      "position": {
+        "x": 760,
+        "y": 160
+      },
+      "name": "게시글",
+      "pName": "posts",
+      "fields": [
+        {
+          "_id": "3935a4c0d1bc00cbf",
+          "name": "작성자 아이디",
+          "pName": "user_id",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": "071e1f937b82c89af",
+          "relFieldId": "da089850eaab49c28",
+          "relType": "ZERO_OR_MANY",
+          "relGroupId": "f8e65ada5ee302ca5"
+        },
+        {
+          "_id": "55ce8119cf339611f",
+          "name": "가수",
+          "pName": "artist",
+          "domain": "",
+          "type": "VARCHAR(100)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "bed0703b388b4a833",
+          "name": "곡명",
+          "pName": "track_title",
+          "domain": "",
+          "type": "VARCHAR(200)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "be64632250938adcb",
+          "name": "장르",
+          "pName": "genre",
+          "domain": "",
+          "type": "VARCHAR(30)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "Genre enum 문자열",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "fb903342599bf2861",
+          "name": "감상평",
+          "pName": "content",
+          "domain": "",
+          "type": "TEXT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "5856c4830938c41e4",
+          "name": "게시글 이미지",
+          "pName": "image_url",
+          "domain": "",
+          "type": "VARCHAR(1000)",
+          "defaultValue": "",
+          "isAllowNull": true,
+          "comment": "게시글당 0~1장",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "9ea0f6b6ff173b46e",
+          "name": "조회수",
+          "pName": "view_count",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "0",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "f1299e8c30548b252",
+          "name": "좋아요 수",
+          "pName": "like_count",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "0",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "b470894894496b3e0",
+          "name": "댓글 수",
+          "pName": "comment_count",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "0",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "c5dc6d01fef1935e2",
+          "name": "작성 시각",
+          "pName": "created_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "e43608b1846e72ff6",
+          "name": "수정 시각",
+          "pName": "updated_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        }
+      ],
+      "keys": {
+        "pks": [
+          {
+            "_id": "81a1184bf3954a0aa",
+            "name": "아이디",
+            "pName": "id",
+            "domain": "",
+            "type": "BIGINT",
+            "defaultValue": "",
+            "isAllowNull": false,
+            "comment": "",
+            "relEntity": null,
+            "relFieldId": null,
+            "relType": null,
+            "relGroupId": null
+          }
+        ],
+        "fks": []
+      },
+      "color": "rgba(10, 10, 10, 0.5)"
+    },
+    {
+      "_id": "b6c3e40c9155467ea",
+      "_diagramId": "e6ee13af40c122418",
+      "position": {
+        "x": 300,
+        "y": 700
+      },
+      "name": "댓글",
+      "pName": "comments",
+      "fields": [
+        {
+          "_id": "905edd1b69b19f8b1",
+          "name": "게시글 아이디",
+          "pName": "post_id",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "ON DELETE CASCADE",
+          "relEntity": "ffc66e546e273dc4c",
+          "relFieldId": "81a1184bf3954a0aa",
+          "relType": "ZERO_OR_MANY",
+          "relGroupId": "8cc3852338d04db26"
+        },
+        {
+          "_id": "f271505a51acbd88c",
+          "name": "작성자 아이디",
+          "pName": "user_id",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": "071e1f937b82c89af",
+          "relFieldId": "da089850eaab49c28",
+          "relType": "ZERO_OR_MANY",
+          "relGroupId": "7a6508e427ea4143c"
+        },
+        {
+          "_id": "df8c779ba15c77854",
+          "name": "내용",
+          "pName": "content",
+          "domain": "",
+          "type": "TEXT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "4ab17e8737f253611",
+          "name": "작성 시각",
+          "pName": "created_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        },
+        {
+          "_id": "99df1486ef5aed9a9",
+          "name": "수정 시각",
+          "pName": "updated_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        }
+      ],
+      "keys": {
+        "pks": [
+          {
+            "_id": "7db0c160b1c52a5c7",
+            "name": "아이디",
+            "pName": "id",
+            "domain": "",
+            "type": "BIGINT",
+            "defaultValue": "",
+            "isAllowNull": false,
+            "comment": "",
+            "relEntity": null,
+            "relFieldId": null,
+            "relType": null,
+            "relGroupId": null
+          }
+        ],
+        "fks": []
+      },
+      "color": "rgba(10, 10, 10, 0.5)"
+    },
+    {
+      "_id": "cd4b55d180c003679",
+      "_diagramId": "e6ee13af40c122418",
+      "position": {
+        "x": 900,
+        "y": 760
+      },
+      "name": "게시글 좋아요",
+      "pName": "post_likes",
+      "fields": [
+        {
+          "_id": "ff78bcbbc591e220b",
+          "name": "사용자 아이디",
+          "pName": "user_id",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "post_id와 복합 UNIQUE",
+          "relEntity": "071e1f937b82c89af",
+          "relFieldId": "da089850eaab49c28",
+          "relType": "ZERO_OR_MANY",
+          "relGroupId": "66d154f74fff3fa1d"
+        },
+        {
+          "_id": "3eef21043f30372a0",
+          "name": "게시글 아이디",
+          "pName": "post_id",
+          "domain": "",
+          "type": "BIGINT",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "ON DELETE CASCADE, user_id와 복합 UNIQUE",
+          "relEntity": "ffc66e546e273dc4c",
+          "relFieldId": "81a1184bf3954a0aa",
+          "relType": "ZERO_OR_MANY",
+          "relGroupId": "3c1e1a1746297a4c3"
+        },
+        {
+          "_id": "b42e73af4af7940d4",
+          "name": "생성 시각",
+          "pName": "created_at",
+          "domain": "",
+          "type": "DATETIME(6)",
+          "defaultValue": "",
+          "isAllowNull": false,
+          "comment": "",
+          "relEntity": null,
+          "relFieldId": null,
+          "relType": null,
+          "relGroupId": null
+        }
+      ],
+      "keys": {
+        "pks": [
+          {
+            "_id": "47d056d1295be7c62",
+            "name": "아이디",
+            "pName": "id",
+            "domain": "",
+            "type": "BIGINT",
+            "defaultValue": "",
+            "isAllowNull": false,
+            "comment": "",
+            "relEntity": null,
+            "relFieldId": null,
+            "relType": null,
+            "relGroupId": null
+          }
+        ],
+        "fks": []
+      },
+      "color": "rgba(10, 10, 10, 0.5)"
+    }
+  ],
+  "memoData": [],
+  "domainData": [],
+  "createdAt": "2026-08-09T00:00:00.000Z",
+  "creatorName": "김동원",
+  "creatorThumb": "https://d2sqqdb3t4xrq5.cloudfront.net/images/no_img.jpg"
+}

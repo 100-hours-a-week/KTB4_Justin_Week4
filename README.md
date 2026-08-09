@@ -1,4 +1,16 @@
-# 🎵 TuneLog
+<p align="center">
+  <img src="docs/images/tunelog-logo.png" alt="TuneLog 로고" width="120" />
+</p>
+
+<h1 align="center">TuneLog</h1>
+
+<p align="center">좋아하는 음악과 감상평을 공유하는 음악 커뮤니티 REST API</p>
+
+| 구분 | 주소 |
+| --- | --- |
+| 서비스 | [http://3.34.177.142](http://3.34.177.142) |
+| API Base URL | [http://3.34.177.142/api](http://3.34.177.142/api) |
+| Front-end 저장소 | [100-hours-a-week/KTB4_Justin_Week10](https://github.com/100-hours-a-week/KTB4_Justin_Week10) |
 
 ## Back-end 소개
 
@@ -24,11 +36,13 @@
 | Test & Performance | JUnit, Mockito, Artillery |
 | Deployment | Docker, Docker Compose, GitHub Actions, GHCR, AWS EC2, Amazon RDS |
 
-### Front-end
+## 서비스 아키텍처
 
-- [TuneLog Front-end GitHub](https://github.com/100-hours-a-week/KTB4_Justin_Week10)
+<p align="center">
+  <img src="docs/images/tunelog-service-architecture.svg" alt="TuneLog 서비스 아키텍처" width="100%" />
+</p>
 
-## 서버 구조
+### 애플리케이션 계층
 
 ```mermaid
 flowchart LR
@@ -95,6 +109,8 @@ flowchart LR
 
 ## 주요 API
 
+- [TuneLog API 명세서 다운로드](docs/TuneLog_API_명세서.xlsx)
+
 | Method | Endpoint | 설명 |
 | --- | --- | --- |
 | `POST` | `/auth/signup` | 회원가입 |
@@ -120,59 +136,11 @@ GET /posts?page=0&size=10&genre=ROCK&sort=popular&keyword=oasis
 
 ## 데이터베이스 설계
 
-```mermaid
-erDiagram
-    USERS ||--o{ POSTS : writes
-    USERS ||--o{ COMMENTS : writes
-    USERS ||--o{ POST_LIKES : likes
-    POSTS ||--o{ COMMENTS : has
-    POSTS ||--o{ POST_LIKES : receives
+<p align="center">
+  <img src="docs/images/tunelog-erd.png" alt="TuneLog ERD" width="100%" />
+</p>
 
-    USERS {
-        BIGINT id PK
-        VARCHAR email UK
-        VARCHAR password
-        VARCHAR nickname UK
-        VARCHAR profile_image
-    }
-
-    POSTS {
-        BIGINT id PK
-        BIGINT user_id FK
-        VARCHAR artist
-        VARCHAR track_title
-        VARCHAR genre
-        TEXT content
-        VARCHAR image_url
-        BIGINT view_count
-        BIGINT like_count
-        BIGINT comment_count
-        DATETIME created_at
-        DATETIME updated_at
-    }
-
-    COMMENTS {
-        BIGINT id PK
-        BIGINT post_id FK
-        BIGINT user_id FK
-        TEXT content
-        DATETIME created_at
-        DATETIME updated_at
-    }
-
-    POST_LIKES {
-        BIGINT id PK
-        BIGINT post_id FK
-        BIGINT user_id FK
-        DATETIME created_at
-    }
-```
-
-- 게시글 이미지는 0개 또는 1개이므로 별도 이미지 테이블 대신 `posts.image_url`에 저장합니다.
-- 인기순 조회 시 매번 좋아요를 집계하지 않도록 `posts.like_count`를 사용합니다.
-- 좋아요와 댓글 카운터는 생성·삭제 트랜잭션에서 원자적으로 증감합니다.
-- `(user_id, post_id)` UNIQUE 제약으로 중복 좋아요를 방지합니다.
-- 최신순·장르별·인기순·댓글 페이지 조회를 위한 복합 인덱스를 적용했습니다.
+- [ERD 스냅샷 원본](docs/TuneLog_ERD_snapshot.json)
 
 ## 폴더 구조
 
@@ -268,4 +236,16 @@ flowchart LR
 
 `main` 브랜치에 변경사항이 반영되면 GitHub-hosted Runner가 Docker 이미지를 빌드해 GHCR에 Push합니다. 이후 EC2 Self-hosted Runner가 최신 이미지를 Pull하고 Docker Compose로 Backend 컨테이너를 교체한 뒤 API 응답을 확인합니다.
 
-## 후기
+## 회고
+단순히 API가 동작하도록 만드는 것을 넘어 데이터 구조와 계층별 책임, 성능을 함께 고려하는 과정이 어려웠습니다. 요청과 응답에 어떤 데이터를 포함할지 고민했고, 게시글 목록과 상세 화면의 목적에 맞게 응답 구조를 구분했습니다. DTO가 엔티티의 연관관계를 직접 탐색하지 않도록 조회와 응답 생성의 책임도 정리했습니다.
+
+JPA를 사용하면서 지연 로딩과 N+1 문제를 직접 경험했습니다. 게시글 목록을 조회할 때 작성자, 이미지, 좋아요 수, 댓글 수를 게시글마다 반복해서 조회하던 부분을 발견했고, 연관 데이터를 함께 조회하거나 필요한 데이터를 묶어서 가져오도록 개선했습니다.
+
+데이터베이스 구조도 서비스의 기능에 맞게 변경했습니다. 하나의 제목 문자열에 포함되어 있던 가수와 곡명을 별도 컬럼으로 분리하고 장르를 추가했으며, 이미지와 좋아요·댓글 수처럼 조회 과정에서 자주 사용하는 값도 구조를 변경했습니다. 기존 데이터를 유지하면서 로컬 MySQL과 RDS의 스키마를 변경하는 과정에서 데이터 마이그레이션의 중요성도 배웠습니다.
+
+Spring Security와 JWT를 적용해 인증이 필요한 API를 앞단에서 보호하고, 사용자의 권한에 따라 게시글과 댓글을 수정하거나 삭제할 수 있도록 처리했습니다. 인증 실패와 권한 부족 등 클라이언트가 오류 원인을 정확하게 처리할 수 있도록 예외처리에도 신경 썼습니다.
+
+배포 과정에서는 로컬 환경과 운영 환경의 설정을 분리하고, Spring Boot와 React에 멀티스테이지 Dockerfile을 적용했습니다. Docker Compose를 통해 프론트엔드와 백엔드 컨테이너를 함께 관리했으며, 운영 데이터베이스는 Amazon RDS를 사용해 클라우드 환경에 구성했습니다.
+이후 GitHub Actions를 이용해 코드가 반영되면 Docker 이미지를 자동으로 빌드하고 GHCR에 저장한 뒤, EC2에서 최신 이미지를 내려받아 컨테이너를 교체하도록 CI/CD 파이프라인을 구성했습니다.
+
+아직 개선할 부분은 많지만, 이번 프로젝트를 통해 기능 구현뿐만 아니라 설계, 구조, 성능, 보안, 배포까지 서비스 전체의 흐름을 바라보는 경험을 할 수 있었습니다.
