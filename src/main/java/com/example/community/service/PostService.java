@@ -33,6 +33,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+    private static final int MIN_SEARCH_KEYWORD_LENGTH = 2;
+    private static final int MAX_SEARCH_KEYWORD_LENGTH = 50;
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
@@ -73,6 +75,7 @@ public class PostService {
             String keyword
     ) {
         validatePageRequest(page, size);
+        String normalizedKeyword = normalizeKeyword(keyword);
 
         boolean popular = "popular".equalsIgnoreCase(sort);
         boolean latest = sort == null || "latest".equalsIgnoreCase(sort);
@@ -90,9 +93,9 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size, postSort);
         Page<Post> postPage;
 
-        if (keyword != null && !keyword.isBlank()) {
+        if (normalizedKeyword != null) {
             postPage = postRepository.searchPosts(
-                    keyword.trim(),
+                    normalizedKeyword,
                     genre,
                     pageable
             );
@@ -117,9 +120,7 @@ public class PostService {
         validateAuthenticatedUserId(userId);
         validatePageRequest(page, size);
 
-        String normalizedKeyword = keyword == null || keyword.isBlank()
-                ? null
-                : keyword.trim();
+        String normalizedKeyword = normalizeKeyword(keyword);
 
         Page<Post> postPage = postLikeRepository.findLikedPosts(
                 userId,
@@ -281,5 +282,20 @@ public class PostService {
         } catch (URISyntaxException e) {
             return false;
         }
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        String normalizedKeyword = keyword.trim();
+
+        if (normalizedKeyword.length() < MIN_SEARCH_KEYWORD_LENGTH
+                || normalizedKeyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
+            throw new InvalidRequestException();
+        }
+
+        return normalizedKeyword;
     }
 }
