@@ -5,6 +5,7 @@ import com.example.community.dto.request.UpdatePostRequest;
 import com.example.community.dto.response.PostDetailResponse;
 import com.example.community.dto.response.PostListResponse;
 import com.example.community.dto.response.PageResponse;
+import com.example.community.dto.response.PostSuggestionResponse;
 import com.example.community.entity.Genre;
 import com.example.community.entity.Post;
 import com.example.community.entity.User;
@@ -33,6 +34,9 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+    private static final int MIN_SEARCH_KEYWORD_LENGTH = 2;
+    private static final int MAX_SEARCH_KEYWORD_LENGTH = 50;
+    private static final int MAX_SUGGESTION_SIZE = 5;
 
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
@@ -69,9 +73,11 @@ public class PostService {
             int page,
             int size,
             Genre genre,
-            String sort
+            String sort,
+            String keyword
     ) {
         validatePageRequest(page, size);
+        String normalizedKeyword = normalizeKeyword(keyword);
 
         boolean popular = "popular".equalsIgnoreCase(sort);
         boolean latest = sort == null || "latest".equalsIgnoreCase(sort);
@@ -87,10 +93,19 @@ public class PostService {
                 : Sort.by(Sort.Direction.DESC, "createdAt")
                         .and(Sort.by(Sort.Direction.DESC, "id"));
         Pageable pageable = PageRequest.of(page, size, postSort);
-        Page<Post> postPage = genre == null
-                ? postRepository.findAll(pageable)
-                : postRepository.findByGenre(genre, pageable);
+        Page<Post> postPage;
 
+        if (normalizedKeyword != null) {
+            postPage = postRepository.searchPosts(
+                    normalizedKeyword,
+                    genre,
+                    pageable
+            );
+        } else {
+            postPage = genre == null
+                    ? postRepository.findAll(pageable)
+                    : postRepository.findByGenre(genre, pageable);
+        }
         List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, false);
 
         return new PageResponse<>(postPage, content);
@@ -101,19 +116,37 @@ public class PostService {
             Long userId,
             int page,
             int size,
-            Genre genre
+            Genre genre,
+            String keyword
     ) {
         validateAuthenticatedUserId(userId);
         validatePageRequest(page, size);
 
+        String normalizedKeyword = normalizeKeyword(keyword);
+
         Page<Post> postPage = postLikeRepository.findLikedPosts(
                 userId,
                 genre,
+                normalizedKeyword,
                 PageRequest.of(page, size)
         );
         List<PostListResponse> content = createPostResponses(postPage.getContent(), userId, true);
 
         return new PageResponse<>(postPage, content);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostSuggestionResponse> getPostSuggestions(String keyword, int size) {
+        String normalizedKeyword = requireKeyword(keyword);
+        validateSuggestionSize(size);
+
+        return postRepository.findSuggestions(
+                        normalizedKeyword,
+                        PageRequest.of(0, size)
+                )
+                .stream()
+                .map(PostSuggestionResponse::new)
+                .toList();
     }
 
     @Transactional
@@ -264,6 +297,37 @@ public class PostService {
                     && uri.getHost() != null;
         } catch (URISyntaxException e) {
             return false;
+        }
+    }
+
+    private String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        String normalizedKeyword = keyword.trim();
+
+        if (normalizedKeyword.length() < MIN_SEARCH_KEYWORD_LENGTH
+                || normalizedKeyword.length() > MAX_SEARCH_KEYWORD_LENGTH) {
+            throw new InvalidRequestException();
+        }
+
+        return normalizedKeyword;
+    }
+
+    private String requireKeyword(String keyword) {
+        String normalizedKeyword = normalizeKeyword(keyword);
+
+        if (normalizedKeyword == null) {
+            throw new InvalidRequestException();
+        }
+
+        return normalizedKeyword;
+    }
+
+    private void validateSuggestionSize(int size) {
+        if (size < 1 || size > MAX_SUGGESTION_SIZE) {
+            throw new InvalidRequestException();
         }
     }
 }

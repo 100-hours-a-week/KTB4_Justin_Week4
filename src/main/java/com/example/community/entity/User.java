@@ -11,7 +11,7 @@ public class User{
 
     public static final String WITHDRAWN_NICKNAME_PREFIX = "탈퇴_";
     public static final String WITHDRAWN_DISPLAY_NAME = "알 수 없음";
-    public static final String WITHDRAWN_PROFILE_IMAGE = "https://image.kr/withdrawn.jpg";
+    public static final String WITHDRAWN_PROFILE_IMAGE = "";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
